@@ -35,6 +35,11 @@ public class HttpPost extends HttpClient {
      * 将输入流中的内容转发到服务器，不会关闭输入流
      */
     public void writeStreamToServer(InputStream is) throws IOException {
+
+        if(is == null){
+            return;
+        }
+
         byte[] buf = new byte[1024 * 8];
         int count = 0;
         while ((count = is.read(buf)) != -1) {

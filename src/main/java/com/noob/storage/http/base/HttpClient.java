@@ -2,6 +2,7 @@ package com.noob.storage.http.base;
 
 import com.noob.storage.exception.BusinessException;
 import com.noob.storage.exception.ErrorCode;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
@@ -87,14 +88,20 @@ public class HttpClient {
     /**
      * 根据列表参数，组织HTTP参数信息
      */
-    protected String generateParams(List<com.noob.storage.http.base.Property> properties) {
+    protected String generateParams(List<Property> properties) {
+
+        if(CollectionUtils.isEmpty(properties)){
+            return  null;
+        }
+
         StringBuilder sb = new StringBuilder();
-        for (com.noob.storage.http.base.Property property : properties) {
+        for (Property property : properties) {
             sb.append(property != null ? property : "");
         }
         if (sb.length() > 0) {
             sb.deleteCharAt(sb.length() - 1);
         }
+        
         return sb.toString();
     }
 

@@ -26,11 +26,16 @@ public class SocketDecorate extends Socket implements InitAble {
     /**
      * TCP/IP 三次握手时的超时时间设置
      */
-    private static final int SOCKET_CONNECT_TIMEOUT = 3000;
+    private static final int SOCKET_CONNECT_TIMEOUT = 15000;
     /**
      * Socket 默认的超时时间
      */
-    private static final int SOCKET_DEFAULT_TIMEOUT = 60000;
+    private static final int SOCKET_DEFAULT_TIMEOUT = 90000;
+
+    /**
+     * 最大重试次数
+     */
+    private static final int maxRetryTime = 3;
 
 
     public SocketDecorate(String host, int port) {
@@ -46,7 +51,7 @@ public class SocketDecorate extends Socket implements InitAble {
      * 尝试与服务端建立连接,在连接失败的情况下重试三次
      */
     public boolean init() {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < maxRetryTime; i++) {
             try {
                 SocketAddress address = new InetSocketAddress(host, port);
                 this.connect(address, SOCKET_CONNECT_TIMEOUT);
@@ -65,6 +70,11 @@ public class SocketDecorate extends Socket implements InitAble {
      * 向输出流中输出一行数据
      */
     public void println(String message) {
+
+        if (out == null || StringUtils.isBlank(message)){
+            return;
+        }
+
         out.println(message);
     }
 
@@ -77,14 +87,13 @@ public class SocketDecorate extends Socket implements InitAble {
      * @throws IOException            If an I/O error occurs
      */
     public String readLine() throws IOException {
-        String message = in.readLine();
-        return message;
+        return in.readLine();
     }
 
     public void destroy() {
         try {
             close();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
         }
     }
 
