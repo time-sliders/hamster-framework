@@ -17,23 +17,34 @@ public class ServerSocketProxy extends ServerSocket {
 
     private Logger log = Logger.getLogger(ServerSocketProxy.class);
 
-    public ServerSocketProxy() throws IOException {
-        super();
-    }
-
-    private static final int DEFAULT_POOLSIZE = 20;
+    private static final int DEFAULT_POOL_SIZE = 20;
 
     /**
-     * 是否是多线程模式
+     * 是否是多线程模式<br/>
      * 当该字段值为false的时候,执行startServer方法,主线程会进入accept等待,直到用户连接<br/>
      * 当值为true时,会以线程的方式启动ServerSocket,不会影响主线程执行
      */
-    private boolean isThreadMod = false;
+    private boolean isThreadMod = true;
+
+    /**
+     * 线程池
+     */
+    private ExecutorService threadPool = null;
 
     /**
      * 任何服务端程序处理socket请求的service
      */
     private Class<? extends ServerService> serverServiceClass;
+
+    /**
+     * 创建一个服务端socket监听，无线程池
+     *
+     * @param port               监听端口
+     * @param serverServiceClass 服务端处理service，继承自ServerService
+     */
+    public ServerSocketProxy(int port, Class<? extends ServerService> serverServiceClass) throws IOException {
+        this(port, DEFAULT_POOL_SIZE,serverServiceClass,true);
+    }
 
     /**
      * 创建一个服务端socket监听
@@ -45,14 +56,7 @@ public class ServerSocketProxy extends ServerSocket {
      */
     public ServerSocketProxy(int port, int poolSize, Class<? extends ServerService> serverServiceClass,
                              boolean isThreadMod) throws IOException {
-        super(port);
-        if (poolSize > DEFAULT_POOLSIZE) {
-            threadPool = Executors.newScheduledThreadPool(poolSize);
-        } else {
-            threadPool = Executors.newScheduledThreadPool(DEFAULT_POOLSIZE);
-        }
-        this.isThreadMod = isThreadMod;
-        this.serverServiceClass = serverServiceClass;
+        this(port,Executors.newScheduledThreadPool(poolSize),serverServiceClass,isThreadMod);
     }
 
     /**
@@ -72,57 +76,31 @@ public class ServerSocketProxy extends ServerSocket {
     }
 
     /**
-     * 创建一个服务端socket监听，无线程池
-     *
-     * @param port               监听端口
-     * @param serverServiceClass 服务端处理service，继承自ServerService
-     * @param isThreadMod        是否是线程模式启动服务
-     */
-    public ServerSocketProxy(int port, Class<? extends ServerService> serverServiceClass,
-                             boolean isThreadMod) throws IOException {
-        super(port);
-        this.isThreadMod = isThreadMod;
-        this.serverServiceClass = serverServiceClass;
-    }
-
-    /**
-     * 线程池
-     */
-    private ExecutorService threadPool = null;
-
-    /**
      * 启动这个服务端socket
      */
     public void startServer() {
+
+        Thread serverLoopAcceptThread = new ServerLoopAcceptThread();
+
         if (isThreadMod) {
             /***在子线程中启动服务*/
-            new Thread() {
-                public void run() {
-                    while (true) {
-                        try {
-                            Socket socket = accept();
-                            ServerService serverServer = serverServiceClass.newInstance();
-                            Runnable runnable = createServerTask(serverServer, socket);
-                            if (threadPool == null) {
-                                new Thread(runnable).start();
-                            } else {
-                                threadPool.execute(runnable);
-                            }
-                        } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                        }
-                    }
-                }
-
-                ;
-            }.start();
+            serverLoopAcceptThread.start();
             log.info(">>>>>>>>>>>>Socket Server started in RUNNING mode<<<<<<<<<<<<");
         } else {
             /**在当前线程启动服务*/
             log.info(">>>>>>>>>>>>Socket Server started in RUNNING mode<<<<<<<<<<<<");
-            while (true) {
+            serverLoopAcceptThread.run();
+        }
+    }
+
+
+    class ServerLoopAcceptThread extends Thread{
+
+        public void run(){
+
+            while (!isClosed() && !isInterrupted()) {
                 try {
-                    Socket socket = this.accept();
+                    Socket socket = accept();
                     ServerService serverServer = serverServiceClass.newInstance();
                     Runnable runnable = createServerTask(serverServer, socket);
                     if (threadPool == null) {
@@ -136,6 +114,7 @@ public class ServerSocketProxy extends ServerSocket {
             }
         }
     }
+
 
     /**
      * 创建Runnable

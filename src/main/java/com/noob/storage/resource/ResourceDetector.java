@@ -27,7 +27,8 @@ public class ResourceDetector {
     private InitAble result;
 
     /**
-     * 用于并发探测可用资源的线程池，可以用java的ExecutorService代替
+     * 用于并发探测可用资源的线程池
+     * @see java.util.concurrent.ExecutorService
      */
     private ThreadPool pool;
 
@@ -72,6 +73,7 @@ public class ResourceDetector {
             }
         }
 
+        pool.shutdownNow();
         return result;
     }
 
@@ -92,9 +94,7 @@ public class ResourceDetector {
             try {
                 if (i.init()) {
                     result = i;
-                    synchronized (mainThread) {
-                        mainThread.notify();
-                    }
+                    notifyMainThread();
                 } else {
                     taskFail();
                 }
@@ -103,12 +103,24 @@ public class ResourceDetector {
             }
         }
 
-        synchronized void taskFail() {
-            if (++failCount >= resources.size()) {
-                synchronized (mainThread) {
-                    mainThread.notify();
-                }
-            }
+    }
+
+    /**
+     * 任务失败<br/>
+     * 当所有任务失败之后,唤醒主线程
+     */
+    synchronized void taskFail() {
+        if (++failCount >= resources.size()) {
+            notifyMainThread();
+        }
+    }
+
+    /**
+     * 唤醒主线程
+     */
+    void notifyMainThread() {
+        synchronized (mainThread) {
+            mainThread.notify();
         }
     }
 

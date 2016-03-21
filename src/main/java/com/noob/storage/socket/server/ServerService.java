@@ -1,5 +1,6 @@
 package com.noob.storage.socket.server;
 
+import com.alibaba.dubbo.common.utils.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -37,13 +38,18 @@ public abstract class ServerService {
         if (socket != null && !socket.isClosed()) {
             try {
                 socket.close();
-            } catch (IOException e) {
+            } catch (IOException ignore) {
             }
         }
     }
 
     public void println(String message) {
-        this.out.println(message);
+
+        if(StringUtils.isBlank(message)){
+            return;
+        }
+
+        out.println(message);
     }
 
     public String readLine() throws IOException {
