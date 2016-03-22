@@ -26,28 +26,39 @@ public class FilePersistentTaskLoader {
     /**
      * 加载临时目录下所有的临时文件
      */
-    public static List<com.noob.storage.thread.daemon.DaemonThread> loadAllTasks() {
-        List<com.noob.storage.thread.daemon.DaemonThread> tasks = new LinkedList<com.noob.storage.thread.daemon.DaemonThread>();
+    public static List<DaemonThread> loadAllTasks() {
+
+        List<DaemonThread> tasks = new LinkedList<DaemonThread>();
+
         File rootFile = new File(tempRootPath);
-        if (rootFile.exists() && rootFile.mkdirs()) {
-            File[] classDirs = rootFile.listFiles();
-            if (ArrayUtils.isNotEmpty(classDirs)) {
-                for (File classDir : classDirs) {
-                    if (!classDir.isDirectory()) {
-                        continue;
-                    }
-                    File[] taskFiles = classDir.listFiles();
-                    if (taskFiles == null || taskFiles.length <= 0) {
-                        continue;
-                    }
-                    for (File taskFile : taskFiles) {
-                        if (taskFile.isFile()) {
-                            tasks.add(loadTask(taskFile));
-                        }
-                    }
+        if (!rootFile.exists() && rootFile.mkdirs()) {
+            return null;
+        }
+
+        File[] classDirs = rootFile.listFiles();
+        if (ArrayUtils.isEmpty(classDirs)) {
+            return null;
+        }
+
+        for (File classDir : classDirs) {
+            if (!classDir.isDirectory()) {
+                continue;
+            }
+            File[] taskFiles = classDir.listFiles();
+            if (taskFiles == null || taskFiles.length <= 0) {
+                continue;
+            }
+            for (File taskFile : taskFiles) {
+                if (!taskFile.isFile()) {
+                    continue;
+                }
+                DaemonThread daemonThread = loadTask(taskFile);
+                if (daemonThread != null) {
+                    tasks.add(daemonThread);
                 }
             }
         }
+
         return tasks;
     }
 
@@ -56,11 +67,16 @@ public class FilePersistentTaskLoader {
      *
      * @param taskFile 该类的一个对象落地文件
      */
-    private static com.noob.storage.thread.daemon.DaemonThread loadTask(File taskFile) {
+    private static DaemonThread loadTask(File taskFile) {
+
+        if(taskFile == null){
+            return null;
+        }
+
         ObjectInputStream ois = null;
         try {
             ois = new ObjectInputStream(new FileInputStream(taskFile));
-            com.noob.storage.thread.daemon.DaemonThread task = (com.noob.storage.thread.daemon.DaemonThread) ois.readObject();
+            DaemonThread task = (DaemonThread) ois.readObject();
             log.info("成功加载文件持久守护线任务[" + task + "]");
             return task;
         } catch (Throwable e) {

@@ -19,42 +19,45 @@ public abstract class FilePersistentTask extends DaemonThread implements Seriali
     /**
      * 该对象在本地的文件持久
      */
-    private String tempFile;
+    private String tempFileUrl;
 
     public FilePersistentTask() {
         super();
-        tempFile = FilePersistentTaskLoader.tempRootPath
+        tempFileUrl = FilePersistentTaskLoader.tempRootPath
                 + this.getClass().getCanonicalName()
                 + File.separatorChar + this.getTaskName();
     }
 
     @Override
     public void before() {
-        super.before();
         createTaskFile(this);
     }
 
     @Override
     public void afterSuccess() {
-        deleteTaskFile(this);
+        File file = new File(tempFileUrl);
+        deleteFile(file);
     }
 
     /**
      * 将守护任务落地持久
      */
     public void createTaskFile(DaemonThread task) {
+
+        if (task == null || task.isTerminated()) {
+            return;
+        }
+
         File path = new File(FilePersistentTaskLoader.tempRootPath +
                 task.getClass().getCanonicalName() + File.separatorChar);
         if (!path.exists() && !path.mkdirs()) {
             throw new RuntimeException("文件创建失败");
         }
-        File file = new File(tempFile);
-        if (file.exists()) {
-            return;
-        }
+        File file = new File(tempFileUrl);
+        deleteFile(file);
         ObjectOutputStream oos = null;
         try {
-            if(file.createNewFile()){
+            if (file.createNewFile()) {
                 oos = new ObjectOutputStream(new FileOutputStream(file));
                 oos.writeObject(task);
                 oos.flush();
@@ -63,7 +66,7 @@ public abstract class FilePersistentTask extends DaemonThread implements Seriali
             }
         } catch (IOException e) {
             log.info("创建临时文件失败:" + e.getMessage(), e);
-            deleteTaskFile(task);
+            deleteFile(file);
         } finally {
             IOUtils.closeQuietly(oos);
         }
@@ -71,13 +74,10 @@ public abstract class FilePersistentTask extends DaemonThread implements Seriali
 
     /**
      * 删除任务在文件系统中的文件
-     *
-     * @param task 删除的任务
      */
-    public void deleteTaskFile(DaemonThread task) {
-        File file = new File(tempFile);
-        if (file.exists() && !file.delete()) {
-            log.error("删除文件{"+task.getTaskName()+"}失败");
+    public void deleteFile(File file) {
+        if (file != null && file.exists() && !file.delete()) {
+            log.error("删除文件{" + file.getName() + "}失败");
         }
     }
 

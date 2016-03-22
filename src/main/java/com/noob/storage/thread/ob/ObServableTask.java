@@ -11,7 +11,7 @@ public abstract class ObservableTask implements Runnable {
 
     protected Counter counter;
 
-    private Thread mainThread;
+    private final Thread mainThread;
 
     public ObservableTask() {
         mainThread = Thread.currentThread();

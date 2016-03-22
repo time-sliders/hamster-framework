@@ -1,6 +1,7 @@
 package com.noob.storage.socket.server;
 
 import com.alibaba.dubbo.common.utils.StringUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -30,16 +31,7 @@ public abstract class ServerService {
         } catch (IOException e) {
             logger.info(e.getMessage(), e);
         } finally {
-            closeQuietly();
-        }
-    }
-
-    private void closeQuietly() {
-        if (socket != null && !socket.isClosed()) {
-            try {
-                socket.close();
-            } catch (IOException ignore) {
-            }
+            IOUtils.closeQuietly(socket);
         }
     }
 

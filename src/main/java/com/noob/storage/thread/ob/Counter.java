@@ -3,9 +3,9 @@ package com.noob.storage.thread.ob;
 /**
  * 计数器
  * <p>
- * 子线程成多线程操作该对象，该对象的属性值变更必须 <strong><code>synchronized</code></strong>，
- * 如果需要增加其他字段，可以新建子类处理
+ * 子线程成多线程操作该对象
  * </p>
+ * thread-safe
  */
 public class Counter {
 
