@@ -1,7 +1,7 @@
 package com.noob.storage.socket.server;
 
-import com.alibaba.dubbo.common.utils.StringUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
