@@ -1,6 +1,5 @@
 package com.noob.storage.common.config;
 
-import com.noob.storage.utils.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -74,7 +73,7 @@ public class FileConfig {
         }
         FileOutputStream fos = null;
         try {
-            FileUtils.createFileWithPath(configFilePath);
+            // TODO create File and Path
             fos = new FileOutputStream(new File(configFilePath));
             properties.store(fos, name);
         } catch (FileNotFoundException e) {
