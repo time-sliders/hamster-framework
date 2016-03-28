@@ -29,8 +29,7 @@ public class ThreadPool extends ThreadPoolExecutor {
     public void waitFinish() {
         try {
             waitFinish(Integer.MAX_VALUE, TimeUnit.DAYS);
-        } catch (BusinessException e) {
-            //dead code
+        } catch (BusinessException ignore) {
         }
     }
 

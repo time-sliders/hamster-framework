@@ -10,7 +10,7 @@ public abstract class Holder {
     /**
      * 当前持有者对资源的渴望程度
      */
-    protected int needForReSource;
+    protected int proportion;
 
     protected Scheduler scheduler;
 
@@ -19,14 +19,25 @@ public abstract class Holder {
     }
 
     /**
-     * @param needForReSource 资源的渴望度
+     * @param proportion 资源的渴望度
      */
-    public Holder(int needForReSource) {
-        this.needForReSource = needForReSource;
+    public Holder(int proportion) {
+
+        if (proportion < 0) {
+            throw new IllegalArgumentException("proportion must big than 0!");
+        }
+
+        this.proportion = proportion;
     }
 
     public void reInit(int holdNum) {
+
+        if (holdNum < 0) {
+            throw new IllegalArgumentException("holdNum must big than 0!");
+        }
+
         reSize(holdNum);
+
         this.holdNum = holdNum;
     }
 
@@ -38,7 +49,7 @@ public abstract class Holder {
 
     /**
      * 子类重写该方法
-     * 实现根据线程的执行情况，动态调成资源渴望值(needForReSource)
+     * 实现根据线程的执行情况，动态调成资源渴望值(proportion)
      */
     protected abstract void calculateNeed();
 
@@ -46,12 +57,12 @@ public abstract class Holder {
         this.scheduler = scheduler;
     }
 
-    public int getNeedForReSource() {
-        return needForReSource;
+    public int getProportion() {
+        return proportion;
     }
 
-    public void setNeedForReSource(int needForReSource) {
-        this.needForReSource = needForReSource;
+    public void setProportion(int proportion) {
+        this.proportion = proportion;
     }
 
     public void release() {

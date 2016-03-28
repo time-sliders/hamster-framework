@@ -4,41 +4,42 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-public class Scheduler implements Runnable {
+public class Scheduler extends Thread {
 
     private Logger log = Logger.getLogger(getClass());
 
-    private int maxnum;
+    private int maxNum;
 
     private List<Holder> holders = Collections.synchronizedList(new ArrayList<Holder>());
+
+    private static final int DEFAULT_SLEEP_TIME = 1000 * 60;
 
     /**
      * 分配策略
      * 在调度者注册或者释放资源持有对象的时候，根据该策略来重新分配任务
      * 调度器启动之后也会每隔一段时间自动重新分配
      */
-    private ResourceAllocatePolicy alocatePolicy;
+    private ResourceAllocatePolicy allocatePolicy;
 
     private static final ResourceAllocatePolicy defaultAllocatePolicy
             = new ProportionAllocatePolicy();
 
-    public Scheduler(int maxnum) {
-        this(maxnum, defaultAllocatePolicy);
+    public Scheduler(int maxNum) {
+        this(maxNum, defaultAllocatePolicy);
     }
 
-    public Scheduler(int maxnum, ResourceAllocatePolicy alocatePolicy) {
-        this.maxnum = maxnum;
-        this.alocatePolicy = alocatePolicy;
+    public Scheduler(int maxNum, ResourceAllocatePolicy allocatePolicy) {
+        this.maxNum = maxNum;
+        this.allocatePolicy = allocatePolicy;
     }
 
     /**
      * 根据指定的分配策略重新分配资源
      */
     private synchronized void reAllocate() {
-        alocatePolicy.allocate(maxnum, holders);
+        allocatePolicy.allocate(maxNum, holders);
     }
 
     /**
@@ -48,25 +49,12 @@ public class Scheduler implements Runnable {
         if (holder == null) {
             throw new NullPointerException();
         }
-        if (holder.getNeedForReSource() <= 0) {
-            holder.setNeedForReSource(getAvgNeed());
+        if (holder.getProportion() <= 0) {
+            throw new IllegalArgumentException("holder.proportion must not be null!");
         }
         if (holders.add(holder)) {
             holder.setScheduler(this);
             reAllocate();
-        }
-    }
-
-    /**
-     * 获取已注册持有者的平均资源需求度
-     */
-    public int getAvgNeed() {
-        synchronized (holders) {
-            int countNeed = 0;
-            for (int i = 0; i < holders.size(); i++) {
-                countNeed += holders.get(i).getNeedForReSource();
-            }
-            return countNeed / holders.size();
         }
     }
 
@@ -80,29 +68,20 @@ public class Scheduler implements Runnable {
     }
 
     /**
-     * 获取当前调度器空闲的资源量
-     */
-    public int idleNum() {
-        synchronized (holders) {
-            int usedNum = 0;
-            for (Iterator<Holder> i = holders.iterator(); i.hasNext(); ) {
-                usedNum += i.next().getHoldNum();
-            }
-            return maxnum - usedNum;
-        }
-    }
-
-    /**
      * 调度器每隔一段时间动态分配资源
      */
     public void run() {
-        while (true) {
+        while (!isInterrupted() && isAlive()) {
             try {
+
                 for (Holder holder : holders) {
                     holder.calculateNeed();
                 }
+
                 reAllocate();
-                Thread.sleep(1000 * 60);
+
+                Thread.sleep(DEFAULT_SLEEP_TIME);
+
             } catch (Throwable e) {
                 log.error(e);
             } finally {

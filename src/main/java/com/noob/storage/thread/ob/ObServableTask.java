@@ -21,7 +21,7 @@ public abstract class ObservableTask implements Runnable {
         try {
             execute();
         } catch (Throwable e) {
-            log.error(e.getMessage(), e);
+            log.error("ObservableTask occur exception", e);
         } finally {
             if (counter.isFinish()) {
                 notifyMainThread();

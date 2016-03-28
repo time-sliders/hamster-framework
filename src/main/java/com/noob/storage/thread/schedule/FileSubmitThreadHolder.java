@@ -1,7 +1,7 @@
 package com.noob.storage.thread.schedule;
 
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -17,9 +17,9 @@ public abstract class FileSubmitThreadHolder extends ThreadHolder {
     private static final int maxCacheSize = 10;
 
     /**
-     * 最近几次
+     * 最近maxCacheSize次传输速度快照
      */
-    protected List<Integer> trackInfo = new LinkedList<Integer>();
+    protected Deque<Integer> snapshot = new LinkedList<Integer>();
 
     public FileSubmitThreadHolder(ThreadPoolExecutor pool) {
         super(pool);
@@ -34,20 +34,19 @@ public abstract class FileSubmitThreadHolder extends ThreadHolder {
      */
     @Override
     protected void calculateNeed() {
-        this.needForReSource = totalSize / holdNum;
+
+        this.proportion = totalSize / holdNum;
+
+        if (snapshot.size() >= maxCacheSize) {
+            snapshot.removeLast();
+            snapshot.addFirst(proportion);
+        }
+
         totalSize = 0;
-        recodeTrackInfo(needForReSource);
     }
 
     protected synchronized void totalSizePlus(int size) {
         totalSize += size;
-    }
-
-    private synchronized void recodeTrackInfo(Integer info) {
-        if (trackInfo.size() >= maxCacheSize) {
-            trackInfo.remove(trackInfo.size() - 1);
-            trackInfo.add(info);
-        }
     }
 
 }
