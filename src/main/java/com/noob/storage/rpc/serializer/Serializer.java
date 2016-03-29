@@ -1,4 +1,4 @@
-package com.noob.storage.serializer;
+package com.noob.storage.rpc.serializer;
 
 import java.util.List;
 
