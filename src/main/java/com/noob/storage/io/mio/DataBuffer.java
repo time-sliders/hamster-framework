@@ -13,7 +13,7 @@ public class DataBuffer {
     /**
      * buffer 里面的有效数据量<br/>
      * 需要注意的是inputStream.read(buffer = new byte[size]))<br/>
-     * 即使在inputStrean读完之前，也并不一定能将buffer读满，所以需要<br/>
+     * 即使在inputStream读完之前，也并不一定能将buffer读满，所以需要<br/>
      * count字段来记录buffer里面的有效数据
      */
     private int count;

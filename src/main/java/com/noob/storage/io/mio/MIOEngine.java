@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
  * 异步流处理引擎<br/>
  * 该类提供一输入流同时输出到多个输出流的功能，输入流输出流互不干涉
- * <p/>
+ * <p>
  * 你可以这样使用:
  * <hr>
  * <pre><strong>
@@ -52,7 +53,7 @@ public class MIOEngine {
     /**
      * 引擎是否已经启动
      */
-    private boolean isStarted = false;
+    private AtomicBoolean isStarted = new AtomicBoolean(false);
 
     /**
      * 输入流数据是否已经全部读取完毕
@@ -62,7 +63,7 @@ public class MIOEngine {
     private int maxKey = 0;
 
     public void addOutputStream(OutputStream os) {
-        if (isStarted) {
+        if (isStarted.get()) {
             throw new ProcessException(
                     "engine is already started! refuse OutputStream add to engine!");
         }
@@ -76,7 +77,10 @@ public class MIOEngine {
      * 输入流开始读取数据 启动输出流并开始写出数据
      */
     public void start() {
-        isStarted = true;
+        if (isStarted.compareAndSet(false, true)) {
+            throw new ProcessException(
+                    "engine is already started!");
+        }
         int count;
         byte[] buffer;
         try {
@@ -149,7 +153,7 @@ public class MIOEngine {
     }
 
     public void setInputStream(InputStream is) {
-        if (isStarted) {
+        if (isStarted.get()) {
             throw new ProcessException(
                     "engine is already started! refuse InputStream add to engine!");
         }

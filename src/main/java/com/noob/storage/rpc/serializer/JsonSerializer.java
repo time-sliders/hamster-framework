@@ -18,8 +18,9 @@ public class JsonSerializer implements Serializer {
 
 	public byte[] serialization(Object object) {
 
-		if (object == null)
+		if (object == null){
 			return null;
+		}
 
 		try {
 			return SafeEncoder.encode(JSONObject.toJSONString(object));
