@@ -1,6 +1,7 @@
 package com.noob.storage.io.mio;
 
 import com.noob.storage.exception.ProcessException;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +59,7 @@ public class MIOEngine {
     /**
      * 输入流数据是否已经全部读取完毕
      */
-    private boolean isAllDataReceived = false;
+    private volatile boolean isAllDataReceived = false;
 
     private int maxKey = 0;
 
@@ -117,6 +118,11 @@ public class MIOEngine {
      * 唤醒全部子线程
      */
     public void notifyAllOutputThread() {
+
+        if (CollectionUtils.isEmpty(outputThreads)) {
+            return;
+        }
+
         for (OutputThread outputThread : outputThreads) {
             synchronized (outputThread) {
                 outputThread.notify();

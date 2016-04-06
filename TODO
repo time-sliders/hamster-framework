@@ -9,7 +9,7 @@
     2.5 了解一下其他主流Serializer
 
     2.6 TCP 文档整理
-    2.7 NIO 学习
+    2.7 NIO 学习 NIO异步转同步
     2.8 HTTP 文档整理
 
     2.9 reflect 反射
