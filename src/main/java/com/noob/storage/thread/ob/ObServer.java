@@ -1,5 +1,6 @@
 package com.noob.storage.thread.ob;
 
+import com.noob.storage.thread.ThreadPool;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -35,6 +36,11 @@ public class Observer {
 
     private Status status = Status.CREATE;
 
+    public Observer(){
+        this.counter = new Counter();
+        this.threadPool = new ThreadPool(0);
+    }
+
     /**
      * @param pool    当前观察者使用线程池
      * @param counter 子线程之间计数以及通讯的共享内存
@@ -45,21 +51,21 @@ public class Observer {
     }
 
     public void add(ObservableTask task) {
-        if (status == Status.CREATE) {
-            if (!observableTasks.contains(task)) {
-                observableTasks.add(task);
-                task.setCounter(counter);
-                counter.allPlus();
-            }
-        } else {
+
+        if (status != Status.CREATE) {
             throw new IllegalStateException(status.toString());
+        }
+
+        if (!observableTasks.contains(task)) {
+            observableTasks.add(task);
+            task.setCounter(counter);
+            counter.allPlus();
         }
     }
 
     public void start() throws TaskNotFinishException {
         status = Status.STARTED;
         try {
-
             for (Runnable command : observableTasks) {
                 threadPool.execute(command);
             }
