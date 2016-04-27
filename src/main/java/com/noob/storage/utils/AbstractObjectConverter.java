@@ -7,18 +7,16 @@ import java.util.List;
  * Abstract implementation of {@link ObjectConverter} that return {@code null}
  * for or {@code null} parameter. Implementations of {@link ObjectConverter}
  * can extends this class to avoid redundant {@code null} check.
- * 
- * @param <F>
- *            facade layer type
- * @param <M>
- *            dal layer type
+ *
+ * @param <F> facade layer type
+ * @param <M> dal layer type
  */
 public abstract class AbstractObjectConverter<F, M> implements ObjectConverter<F, M> {
 
     /**
      * Check whether the specified facade object is null and then use
      * {@link #onBuildDto(Object)}to transform the specified faccade object.
-     * 
+     * <p>
      * {@inheritDoc}
      */
     public M toDto(F model) {
@@ -30,9 +28,8 @@ public abstract class AbstractObjectConverter<F, M> implements ObjectConverter<F
 
     /**
      * It is guaranteed that the specified facade object is a non-null object.
-     * 
-     * @param model
-     *            a facade layer object
+     *
+     * @param model a facade layer object
      * @return the corresponding dal layer object
      */
     protected abstract M onBuildDto(F model);
@@ -40,7 +37,7 @@ public abstract class AbstractObjectConverter<F, M> implements ObjectConverter<F
     /**
      * Check whether the specified dal object is null and then use
      * {@link #onBuildModel(Object)} to transform the specified dal object.
-     * 
+     * <p>
      * {@inheritDoc}
      */
     public F toModel(M dto) {
