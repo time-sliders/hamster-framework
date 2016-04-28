@@ -2,10 +2,8 @@ package com.noob.storage.component;
 
 import com.alibaba.dubbo.common.utils.StringUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;

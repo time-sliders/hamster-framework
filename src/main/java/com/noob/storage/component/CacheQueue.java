@@ -35,13 +35,20 @@ public class CacheQueue<K, V> {
     }
 
     public synchronized void put(K key, V value) {
-        if (key != null && StringUtils.isNotBlank(key.toString()) && !contains(key)) {
-            if (keyQueue.size() >= capacity) {
-                valueMap.remove(keyQueue.poll());
-            }
-            keyQueue.add(key);
-            valueMap.put(key, value);
+
+        if (key == null ||
+                StringUtils.isBlank(key.toString()) ||
+                contains(key)) {
+            return;
         }
+
+        if (keyQueue.size() >= capacity) {
+            valueMap.remove(keyQueue.poll());
+        }
+
+        keyQueue.add(key);
+        valueMap.put(key, value);
+
     }
 
     public V get(K key) {
