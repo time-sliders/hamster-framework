@@ -65,7 +65,7 @@ public abstract class HttpClientUtils {
      * 2. HttpClient 超时设定使用的是 Int32 , 所以这里也不推荐再使用 Int64. <br>
      */
     public static String post(String url, String body, String contentType, String encode, long readTimeout)
-            throws ConnectTimeoutException, SocketTimeoutException, Exception {
+            throws Exception {
         String mimeType = contentType;
         if (StringUtils.isNotBlank(contentType) && contentType.contains(";")) {
             mimeType = contentType.substring(0, contentType.indexOf(";")).trim();
@@ -87,7 +87,7 @@ public abstract class HttpClientUtils {
      */
     public static String post(String url, String body, String mimeType,
                               String charset, Integer connTimeout, Integer readTimeout)
-            throws ConnectTimeoutException, SocketTimeoutException, Exception {
+            throws Exception {
         return post(url, null, body, mimeType, charset, connTimeout, readTimeout);
     }
 
@@ -105,7 +105,7 @@ public abstract class HttpClientUtils {
      */
     public static String post(String url, Map<String, String> headers, String body, String mimeType,
                               String charset, Integer connTimeout, Integer readTimeout)
-            throws ConnectTimeoutException, SocketTimeoutException, Exception {
+            throws Exception {
         HttpClient client = null;
         HttpPost post = new HttpPost(url);
         String result = "";
@@ -160,7 +160,7 @@ public abstract class HttpClientUtils {
      */
     public static String postForm(String url, Map<String, String> params,
                                   Map<String, String> headers, Integer connTimeout, Integer readTimeout)
-            throws ConnectTimeoutException, SocketTimeoutException, Exception {
+            throws Exception {
 
         return postForm(url, params, headers, null, connTimeout, readTimeout);
     }
@@ -170,7 +170,7 @@ public abstract class HttpClientUtils {
      */
     public static String postForm(String url, Map<String, String> params, Map<String, String> headers,
                                   String charset, Integer connTimeout, Integer readTimeout)
-            throws ConnectTimeoutException, SocketTimeoutException, Exception {
+            throws Exception {
 
         HttpClient client = null;
 
@@ -243,7 +243,7 @@ public abstract class HttpClientUtils {
      * 发送一个 GET 请求
      */
     public static String get(String url, String charset, Integer connTimeout, Integer readTimeout)
-            throws ConnectTimeoutException, SocketTimeoutException, Exception {
+            throws Exception {
         HttpClient client = null;
 
         HttpGet get = new HttpGet(url);
@@ -326,21 +326,4 @@ public abstract class HttpClientUtils {
         return HttpClients.custom().setSSLSocketFactory(sslsf).setRetryHandler(new DefaultHttpRequestRetryHandler(0, false)).build();
     }
 
-    public static void main(String[] args) {
-        try {
-            int i = 0;
-            while(i++ < 100){
-                System.out.println(post("http://192.168.1.90:7001/openapi/fundbusrestful/query/fundmarketinfoquery",
-                        null, null, null, "utf-8", 10000, 10000));
-                System.out.println(post("http://192.168.1.90:7001/openapi/fundbusrestful/query/ratediscountquery",
-                        null, null, null, "utf-8", 10000, 10000));
-                System.out.println(post("http://www.baidu.com",
-                        null, null, null, "utf-8", 10000, 10000));
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
