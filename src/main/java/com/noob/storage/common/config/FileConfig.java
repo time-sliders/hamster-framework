@@ -45,19 +45,33 @@ public class FileConfig {
     }
 
     public void add(String key, String value) {
-        if (!properties.put(key, value).equals(value)) {
+
+        if (StringUtils.isBlank(key) || StringUtils.isBlank(value)) {
+            return;
+        }
+
+        if (!value.equals(properties.put(key, value))) {
             save();
+            logger.info("向配置文件[{}]:[{}]中添加属性key:{},value:{}",
+                    new Object[]{name, location, key, value});
         }
     }
 
     public void remove(String key) {
-        if (properties.remove(key) != null) {
+        if (StringUtils.isNotBlank(key) && properties.remove(key) != null) {
             save();
+            logger.info("从配置文件[{}]:[{}]中删除属性key:{}",
+                    new Object[]{name, location, key});
         }
     }
 
     public String getProperty(String key) {
-        return properties != null ? properties.getProperty(key) : null;
+
+        if (StringUtils.isBlank(key)) {
+            return null;
+        }
+
+        return properties.getProperty(key);
     }
 
     /**

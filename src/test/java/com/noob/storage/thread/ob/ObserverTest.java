@@ -12,7 +12,6 @@ public class ObserverTest {
 
     @Test
     public void TestObserver(){
-        Observer observer = new Observer();
 
     }
 

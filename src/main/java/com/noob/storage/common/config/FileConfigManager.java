@@ -43,9 +43,8 @@ public class FileConfigManager {
         return register(new FileConfig(name, location));
     }
 
-    public String getConfig(String configName, String key) {
-        FileConfig fileConfig = configStore.get(configName);
-        return fileConfig != null ? fileConfig.getProperty(key) : null;
+    public FileConfig getConfig(String name) {
+        return configStore.get(name);
     }
 
 }
