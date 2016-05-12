@@ -4,7 +4,8 @@ import com.noob.storage.exception.ProcessException;
 import com.noob.storage.resource.base.InitAble;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -17,7 +18,7 @@ import java.net.SocketAddress;
  */
 public class SocketDecorate extends Socket implements InitAble {
 
-    private static final Logger log = Logger.getLogger(SocketDecorate.class);
+    private static final Logger log = LoggerFactory.getLogger(SocketDecorate.class);
 
     private PrintWriter out = null;
     private BufferedReader in = null;
@@ -61,7 +62,7 @@ public class SocketDecorate extends Socket implements InitAble {
                 this.setSoTimeout(SOCKET_DEFAULT_TIMEOUT);
                 return true;
             } catch (Exception e) {
-                log.error("与服务器[" + host + ":" + port + "]建立连接失败:" + e.getMessage());
+                log.error("与服务器[{}:{}]建立连接失败:{}",new Object[]{host,port,e.getMessage()});
             }
         }
         return false;

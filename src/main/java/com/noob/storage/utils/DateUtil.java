@@ -3,11 +3,28 @@ package com.noob.storage.utils;
 import org.apache.commons.lang.StringUtils;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 public class DateUtil {
+
+    public static final String FMT_MILL_SEC = "yyyy-MM-dd HH:mm:ss:SSS";
+    public static final String DEFAULT_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String NO_SECOND_FORMAT = "yyyy-MM-dd HH:mm";
+    public static final String yyyy_MM_dd = "yyyy-MM-dd";
+    public static final String yyyy_M_d = "yyyy-M-d";
+    public static final String yy_MM_dd = "yy-MM-dd";
+    public static final String MM_dd = "MM-dd";
+
+    public static final String CHINESE_DATE_FORMAT = "yyyy年MM月dd日";
+    public static final String SHORT_CHINESE_DATE_FORMAT = "M月d日";
+
+    public static final String yyyyMMdd = "yyyyMMdd";
+    public static final String yyyyMd_point = "yyyy.M.d";
+    public static final String yyyyMMdd_slash = "yyyy/MM/dd";
+    public static final String yyyyMd_slash = "yyyy/M/d";
 
     public final static long ONE_DAY_SECONDS = 86400;
 
@@ -55,9 +72,32 @@ public class DateUtil {
             return null;
         }
 
-        String dateStr = format(date, DatePattern.yyyyMMdd);
+        String dateStr = format(date, yyyyMMdd);
 
         return Integer.valueOf(dateStr);
+    }
+
+    /**
+     * 将一个8位日期转换为Date
+     */
+    public static Date getIntAsDate(Integer date) {
+
+        if (date == null) {
+            return null;
+        }
+
+        try {
+            String dateString = date.toString();
+            if (dateString.length() != 8) {
+                throw new IllegalArgumentException("date:" + date
+                        + " is invalid!");
+            }
+
+            return new SimpleDateFormat(yyyyMMdd).parse(date.toString());
+
+        } catch (ParseException ignore) {
+            return null;
+        }
     }
 
     /**
@@ -65,7 +105,7 @@ public class DateUtil {
      *
      * @param date 指定的时间
      */
-    public static void setHMSZero(Date date) {
+    public static void ignoreTime(Date date) {
 
         if (date == null) {
             return;
@@ -74,7 +114,7 @@ public class DateUtil {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
 
-        setHMSZero(calendar);
+        ignoreTime(calendar);
     }
 
     /**
@@ -82,7 +122,7 @@ public class DateUtil {
      *
      * @param calendar 指定的时间
      */
-    public static void setHMSZero(Calendar calendar) {
+    public static void ignoreTime(Calendar calendar) {
 
         if (calendar == null) {
             return;
@@ -110,10 +150,6 @@ public class DateUtil {
         c2.set(Calendar.MILLISECOND, 0);
         return (c2.getTimeInMillis() - c1.getTimeInMillis())
                 / (24 * 60 * 60 * 1000);
-    }
-
-    public static void main(String[] args) {
-
     }
 
 }

@@ -17,11 +17,11 @@ public class DirClassLoader extends ClassLoader {
     public static final String classDir = System.getProperty("dynamicClassDir");
 
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        Class<?> clazz = null;
+        Class<?> clazz;
         if ((clazz = findLoadedClass(name)) != null) {
             return clazz;
         }
-        String classFilePath = null;
+        String classFilePath;
         FileInputStream fis = null;
         ByteArrayOutputStream bos = null;
         try {

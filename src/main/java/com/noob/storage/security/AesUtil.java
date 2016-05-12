@@ -71,7 +71,7 @@ public class AesUtil {
     public static void main(String[] args) {
         String s = "hello world!";
         System.out.println(s = encryptAES(s, getKeystore()));    //KXUuF9jT0eolN6SitO4kuQ==
-        System.out.println(s = decrypt(s, getKeystore()));        //hello world!
+        System.out.println(decrypt(s, getKeystore()));        //hello world!
     }
 
 }
