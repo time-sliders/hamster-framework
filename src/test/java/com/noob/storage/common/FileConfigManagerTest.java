@@ -1,13 +1,9 @@
 package com.noob.storage.common;
 
-import com.noob.storage.common.config.FileConfig;
-import com.noob.storage.common.config.FileConfigManager;
-
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author luyun
@@ -15,36 +11,52 @@ import java.util.Random;
  */
 public class FileConfigManagerTest {
 
+    static ReadWriteLock lock = new ReentrantReadWriteLock();
+    static Lock readLock = lock.readLock();
+    static Lock writeLock = lock.writeLock();
+
     public static void main(String[] args) throws IOException {
+        new WriteThread().start();
+        new WriteThread().start();
+        new ReadThread().start();
+        new ReadThread().start();
+    }
 
-        Map<String, String> configList = new HashMap<String, String>();
-
-        File path = new File("/Users/zhangwei/test/");
-        if (!path.exists() && !path.mkdirs()) {
-            return;
-        }
-
-        File f = new File("/Users/zhangwei/test/myTestConfig.properties");
-        if (!f.exists() && !f.createNewFile()) {
-            return;
-        }
-
-        configList.put("myTestConfig", "/Users/zhangwei/test/myTestConfig.properties");
-        FileConfigManager manager = new FileConfigManager(configList);
-        int i = 0;
-        while (i++ < 100) {
-            FileConfig config = manager.getConfig("myTestConfig");
-            if (i % 2 == 1) {
-                config.add(String.valueOf(i), "hello" + i);
-            } else {
-                int r = new Random().nextInt(i - 1);
-                config.remove(String.valueOf(r));
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ignore) {
-
+    static class WriteThread extends Thread{
+        @Override
+        public void run() {
+            while(true){
+                writeLock.lock();
+                System.out.println(Thread.currentThread().getId()+" write locked");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    break;
+                } finally {
+                    writeLock.unlock();
+                    System.out.println(Thread.currentThread().getId()+" write unlock");
+                }
             }
         }
     }
+
+    static class ReadThread extends Thread{
+        @Override
+        public void run() {
+            while(true){
+                readLock.lock();
+                System.out.println(Thread.currentThread().getId()+" read locked");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    break;
+                } finally {
+                    readLock.unlock();
+                    System.out.println(Thread.currentThread().getId()+" read unlock");
+                }
+            }
+        }
+    }
+
+
 }

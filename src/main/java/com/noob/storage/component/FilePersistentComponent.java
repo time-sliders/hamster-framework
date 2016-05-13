@@ -23,9 +23,9 @@ public class FilePersistentComponent {
      */
     private static final String TMP_FILE_SUFFIX = ".tmp";
 
-    public static void writeStringToFileWithTmp(String filePath, String fileName, String content) throws IOException {
+    public static void writeWithTmp(String filePath, String fileName, String content) throws IOException {
 
-        if (fileName == null || filePath == null || StringUtils.isBlank(content)) {
+        if (StringUtils.isBlank(fileName) || StringUtils.isBlank(filePath) || StringUtils.isBlank(content)) {
             return;
         }
 
@@ -53,7 +53,7 @@ public class FilePersistentComponent {
 
     public static void writeStringToFile(String filePath, String fileName, String content) throws IOException {
 
-        if (fileName == null || filePath == null || StringUtils.isBlank(content)) {
+        if (StringUtils.isBlank(fileName) || StringUtils.isBlank(filePath) || StringUtils.isBlank(content)) {
             return;
         }
 
