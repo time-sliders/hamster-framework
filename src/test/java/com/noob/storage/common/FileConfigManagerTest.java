@@ -11,9 +11,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class FileConfigManagerTest {
 
-    static ReadWriteLock lock = new ReentrantReadWriteLock();
-    static Lock readLock = lock.readLock();
-    static Lock writeLock = lock.writeLock();
+    private static ReadWriteLock lock = new ReentrantReadWriteLock();
+    private static Lock readLock = lock.readLock();
+    private static Lock writeLock = lock.writeLock();
 
     public static void main(String[] args) throws IOException {
         new WriteThread().start();
@@ -22,7 +22,7 @@ public class FileConfigManagerTest {
         new ReadThread().start();
     }
 
-    static class WriteThread extends Thread{
+    private static class WriteThread extends Thread{
         @Override
         public void run() {
             while(true){
@@ -40,7 +40,7 @@ public class FileConfigManagerTest {
         }
     }
 
-    static class ReadThread extends Thread{
+    private static class ReadThread extends Thread{
         @Override
         public void run() {
             while(true){
