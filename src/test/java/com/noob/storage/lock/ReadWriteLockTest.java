@@ -1,4 +1,4 @@
-package com.noob.storage.common;
+package com.noob.storage.lock;
 
 import java.io.IOException;
 import java.util.concurrent.locks.Lock;
@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author luyun
  * @since 2016.05.12
  */
-public class FileConfigManagerTest {
+public class ReadWriteLockTest {
 
     private static ReadWriteLock lock = new ReentrantReadWriteLock();
     private static Lock readLock = lock.readLock();
@@ -29,7 +29,7 @@ public class FileConfigManagerTest {
                 writeLock.lock();
                 System.out.println(Thread.currentThread().getId()+" write locked");
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     break;
                 } finally {
@@ -47,7 +47,7 @@ public class FileConfigManagerTest {
                 readLock.lock();
                 System.out.println(Thread.currentThread().getId()+" read locked");
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     break;
                 } finally {
