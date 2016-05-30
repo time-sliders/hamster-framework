@@ -154,8 +154,9 @@ public abstract class HttpClientUtils {
         return result;
     }
 
-    /**System.out.println(post("http://192.168.1.90:7001/openapi/fundbusrestful/query/ratediscountquery",
-     null, null, null, "utf-8", 10000, 10000));
+    /**
+     * System.out.println(post("http://192.168.1.90:7001/openapi/fundbusrestful/query/ratediscountquery",
+     * null, null, null, "utf-8", 10000, 10000));
      * 提交form表单
      */
     public static String postForm(String url, Map<String, String> params,
@@ -182,7 +183,7 @@ public abstract class HttpClientUtils {
                 for (Entry<String, String> entry : entrySet) {
                     formParams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
                 }
-                UrlEncodedFormEntity entity ;
+                UrlEncodedFormEntity entity;
                 if (StringUtils.isNotBlank(charset)) {
                     entity = new UrlEncodedFormEntity(formParams, Charset.forName(charset.toUpperCase()));
                 } else {
@@ -204,7 +205,7 @@ public abstract class HttpClientUtils {
                 customReqConf.setSocketTimeout(readTimeout);
             }
             post.setConfig(customReqConf.build());
-            HttpResponse res ;
+            HttpResponse res;
             if (url.startsWith("https")) {
                 // 执行 Https 请求.
                 client = createSSLInsecureClient();
