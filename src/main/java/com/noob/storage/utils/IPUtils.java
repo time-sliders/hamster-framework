@@ -5,10 +5,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.*;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
@@ -19,10 +16,8 @@ public class IPUtils {
 
     private static Logger logger = Logger.getLogger(IPUtils.class);
 
-    /**
-     * LOCAL_BACK_LOOP IP 本地回环地址
-     */
-    public static final String LOCAL_BACK_LOOP_IP = "127.0.0.1";
+    public static final String IP4_LOCAL_BACK_LOOP_IP = "127.0.0.1";
+    public static final String IP6_LOCAL_BACK_LOOP_IP = "0:0:0:0:0:0:0:1";
 
     /**
      * 验证传入的IPv4地址是否在指定的IP区域段内部
@@ -97,51 +92,21 @@ public class IPUtils {
      */
     public static String getClientIp(HttpServletRequest request) {
 
-        String clientIp;
-
-        /**
-         * 从F5 x-forwarded-for 消息头中获取<br/>
-         * 获取规则：第一个不为unknown的IP
-         * */
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (StringUtils.isNotBlank(xForwardedFor)) {
-            String[] xForwardedForIps = xForwardedFor.split(",");
-            for (String xForwardedForIp : xForwardedForIps) {
-                if (StringUtils.isNotBlank(xForwardedForIp)
-                        && !"unknown".equalsIgnoreCase(xForwardedForIp)) {
-                    return xForwardedForIp;
-                }
+        if (request == null) return null;
+        String s = request.getHeader("X-Forwarded-For");
+        if (s == null || s.length() == 0 || "unknown".equalsIgnoreCase(s)) s = request.getHeader("Proxy-Client-IP");
+        if (s == null || s.length() == 0 || "unknown".equalsIgnoreCase(s)) s = request.getHeader("WL-Proxy-Client-IP");
+        if (s == null || s.length() == 0 || "unknown".equalsIgnoreCase(s)) s = request.getHeader("HTTP_CLIENT_IP");
+        if (s == null || s.length() == 0 || "unknown".equalsIgnoreCase(s)) s = request.getHeader("HTTP_X_FORWARDED_FOR");
+        if (s == null || s.length() == 0 || "unknown".equalsIgnoreCase(s)) s = request.getRemoteAddr();
+        if (IP4_LOCAL_BACK_LOOP_IP.equals(s) || IP6_LOCAL_BACK_LOOP_IP.equals(s)) {
+            try {
+                s = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException ignore) {
             }
         }
 
-        clientIp = request.getHeader("Proxy-Client-IP");
-        if (StringUtils.isNotBlank(clientIp) && !"unknown".equalsIgnoreCase(clientIp)) {
-            return clientIp;
-        }
-
-        clientIp = request.getHeader("WL-Proxy-Client-IP");
-        if (StringUtils.isNotBlank(clientIp) && !"unknown".equalsIgnoreCase(clientIp)) {
-            return clientIp;
-        }
-
-        clientIp = request.getHeader("Cdn-Src-Ip");
-        if (StringUtils.isNotBlank(clientIp) && !"unknown".equalsIgnoreCase(clientIp)) {
-            return clientIp;
-        }
-
-        clientIp = request.getHeader("X-Real-IP");
-        if (StringUtils.isNotBlank(clientIp) && !"unknown".equalsIgnoreCase(clientIp)) {
-            return clientIp;
-        }
-
-        clientIp = request.getRemoteAddr();
-        //如果客户端就是本地计算机，取不为本地回环地址的IP
-        if (LOCAL_BACK_LOOP_IP.equals(clientIp)) {
-            clientIp = getLocalIp();
-        }
-
-
-        return clientIp;
+        return s;
     }
 
     /**
@@ -158,7 +123,7 @@ public class IPUtils {
                 while (ias.hasMoreElements()) {
                     InetAddress ia = ias.nextElement();
                     if (ia instanceof Inet4Address
-                            && !LOCAL_BACK_LOOP_IP.equals(ia.getHostAddress())) {
+                            && !IP4_LOCAL_BACK_LOOP_IP.equals(ia.getHostAddress())) {
                         return ia.getHostAddress();
                     }
                 }
