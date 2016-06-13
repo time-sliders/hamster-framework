@@ -19,7 +19,7 @@ public class CacheQueue<K, V> {
 
     private LinkedList<K> keyQueue;
 
-    private Map<K, V> valueMap = new HashMap<K, V>();
+    private Map<K, V> valueMap = new HashMap<>();
 
     /**
      * 缓存队列
@@ -31,7 +31,7 @@ public class CacheQueue<K, V> {
             throw new IllegalArgumentException("capacity:" + capacity);
         }
         this.capacity = capacity;
-        keyQueue = new LinkedList<K>();
+        keyQueue = new LinkedList<>();
     }
 
     public synchronized void put(K key, V value) {
@@ -55,7 +55,7 @@ public class CacheQueue<K, V> {
         return valueMap.get(key);
     }
 
-    public boolean contains(K key) {
+    private boolean contains(K key) {
         return valueMap.containsKey(key);
     }
 
