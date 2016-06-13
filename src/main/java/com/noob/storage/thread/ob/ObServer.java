@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
  * b.start();
  * </code></pre>
  */
-public class Observer {
+public class ObServer {
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -32,11 +32,11 @@ public class Observer {
      */
     private Counter counter;
 
-    private List<ObservableTask> observableTasks = Collections.synchronizedList(new ArrayList<ObservableTask>());
+    private List<ObServableTask> observableTasks = Collections.synchronizedList(new ArrayList<ObServableTask>());
 
     private Status status = Status.CREATE;
 
-    public Observer(){
+    public ObServer(){
         this.counter = new Counter();
         this.threadPool = new ThreadPool(0);
     }
@@ -45,12 +45,12 @@ public class Observer {
      * @param pool    当前观察者使用线程池
      * @param counter 子线程之间计数以及通讯的共享内存
      */
-    public Observer(ExecutorService pool, Counter counter) {
+    public ObServer(ExecutorService pool, Counter counter) {
         this.threadPool = pool;
         this.counter = counter;
     }
 
-    public void add(ObservableTask task) {
+    public void add(ObServableTask task) {
 
         if (status != Status.CREATE) {
             throw new IllegalStateException(status.toString());

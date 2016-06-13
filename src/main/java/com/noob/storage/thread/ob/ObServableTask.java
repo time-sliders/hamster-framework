@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 /**
  * 线程池运行的任务
  */
-public abstract class ObservableTask implements Runnable {
+public abstract class ObServableTask implements Runnable {
 
     private Logger log = Logger.getLogger(getClass());
 
@@ -13,7 +13,7 @@ public abstract class ObservableTask implements Runnable {
 
     private final Thread mainThread;
 
-    public ObservableTask() {
+    public ObServableTask() {
         mainThread = Thread.currentThread();
     }
 

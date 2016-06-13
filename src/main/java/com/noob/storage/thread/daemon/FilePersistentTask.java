@@ -2,10 +2,11 @@ package com.noob.storage.thread.daemon;
 
 import com.noob.storage.component.FilePersistentComponent;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * 文件持久任务
