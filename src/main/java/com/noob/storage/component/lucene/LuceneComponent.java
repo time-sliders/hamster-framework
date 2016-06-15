@@ -1,6 +1,7 @@
 package com.noob.storage.component.lucene;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.document.Document;
@@ -16,13 +17,12 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,79 +36,54 @@ public class LuceneComponent {
 
     private static final Logger logger = LoggerFactory.getLogger(LuceneComponent.class);
 
-    private static final String FS_DIRECTORY_PATH = "~/tmp/";
+    // 默认数据文件的存放路径
+    private static final String FS_DIRECTORY_PATH = "/Users/zhangwei/test/lucene/";
 
-    /**
-     * 获取文件系统的索引写入器
-     *
-     * @throws IOException
-     */
-    private IndexWriter getFSIndexWriter() throws IOException {
-        Directory dir = FSDirectory.open(new File(FS_DIRECTORY_PATH));
-        if (IndexWriter.isLocked(dir)) {
-            IndexWriter.unlock(dir);
+    private static final String ID = "id";
+
+    private static final Analyzer analyzer = new SmartChineseAnalyzer(Version.LUCENE_47);
+
+    private Directory dir = null;
+
+    public LuceneComponent() {
+        this(FS_DIRECTORY_PATH);
+    }
+
+    public LuceneComponent(String fsDirectoryPath) {
+        try {
+            this.dir = FSDirectory.open(new File(fsDirectoryPath));
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
-        Analyzer analyzer = new SmartChineseAnalyzer(Version.LUCENE_47);
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
-        return new IndexWriter(dir, config);
     }
 
     /**
-     * 获取内存的索引写入器
-     *
-     * @throws IOException
-     */
-    private IndexWriter getRAMIndexWriter() throws IOException {
-        Directory dir = new RAMDirectory();
-        Analyzer analyzer = new SmartChineseAnalyzer(Version.LUCENE_47);
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
-        return new IndexWriter(dir, config);
-    }
-
-    /**
-     * 将指定的lucene对象添加到lucene索引中
+     * 添加lucene索引<br/>
+     * 为防止数据重复,这里直接调用update即可.
      */
     public boolean add(LuceneObject luceneObject) {
-        IndexWriter indexWriter = null;
-        try {
-            indexWriter = getRAMIndexWriter();
-            Document doc = luceneObject.asDocument();
-            indexWriter.addDocument(doc);
-            indexWriter.commit();
-            return true;
-        } catch (IOException e) {
-            logger.error("", e);
-            return false;
-        } finally {
-            IOUtils.closeQuietly(indexWriter);
-        }
+        return update(luceneObject);
     }
 
+    /**
+     * 更新lucene索引<br/>
+     * lucene update 会先删除原有数据,再增添新数据.
+     */
     public boolean update(LuceneObject luceneObject) {
-        IndexWriter indexWriter = null;
-        try {
-            indexWriter = getRAMIndexWriter();
-            Document doc = luceneObject.asDocument();
-            Term term = new Term("id", luceneObject.getLuceneId());
-            indexWriter.updateDocument(term, doc);
-            indexWriter.commit();
-            return true;
-        } catch (IOException e) {
-            logger.error("", e);
-            return false;
-        } finally {
-            IOUtils.closeQuietly(indexWriter);
-        }
-    }
 
-    public boolean delete(LuceneObject luceneObject) {
+        Assert.notNull(luceneObject, "luceneObject must not be null!");
+        Assert.hasText(luceneObject.getLuceneId(), "luceneId must not be null!");
+
         IndexWriter indexWriter = null;
         try {
-            indexWriter = getRAMIndexWriter();
-            Term term = new Term("id", luceneObject.getLuceneId());
-            indexWriter.deleteDocuments(term);
+            IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+            indexWriter = new IndexWriter(dir, config);
+            Document doc = luceneObject.asDocument();
+            Term term = new Term(ID, luceneObject.getLuceneId());
+            indexWriter.updateDocument(term, doc);
             return true;
-        } catch (IOException e) {
+        } catch (Throwable e) {
+            e.printStackTrace();
             logger.error("", e);
             return false;
         } finally {
@@ -117,47 +92,80 @@ public class LuceneComponent {
     }
 
     /**
-     * 查询 从lucene索引引擎中检索数据
-     *
-     * @param queryStr  查询字符串
-     * @param fields    属性列表
-     * @param converter 转换器,复制将检索出的结果转换为业务模型
+     * 根据luceneId删除索引
      */
-    public List search(String queryStr, String[] fields,
-                       AbstractLuceneDocumentConverter<?> converter) throws Exception {
+    public boolean delete(String luceneId) {
 
-        Directory directory = null;
+        Assert.hasText(luceneId, "luceneId must not be null!");
+
+        IndexWriter indexWriter = null;
+        try {
+            IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+            indexWriter = new IndexWriter(dir, config);
+            Term term = new Term(ID, luceneId);
+            indexWriter.deleteDocuments(term);
+            return true;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("", e);
+            return false;
+        } finally {
+            IOUtils.closeQuietly(indexWriter);
+        }
+    }
+
+    /**
+     * 检索&查询
+     *
+     * @param queryStr  输入的查询字符串
+     * @param fields    查询的属性名称列表(尽可能的缩小查询范围)
+     * @param converter 转换器,将检索出的结果转换为业务模型
+     * @param limit     最大查询的数据量
+     */
+    public <E extends LuceneObject> List<E> search(String queryStr,
+                                                   String[] fields,
+                                                   AbstractLuceneDocumentConverter<E> converter,
+                                                   int limit) throws Exception {
+
+        Assert.notEmpty(fields, "fields must not be empty!");
+        Assert.hasText(queryStr, "queryStr must not be null!");
+        Assert.notNull(converter, "converter must not be null!");
+
+        limit = limit <= 0 ? 1 : limit;
+
         DirectoryReader reader = null;
-        List<Object> result = null;
+        List<E> l = null;
 
         try {
-            directory = new RAMDirectory();
-            reader = DirectoryReader.open(directory);
+            reader = DirectoryReader.open(dir);
             IndexSearcher searcher = new IndexSearcher(reader);
-            Analyzer analyzer = new SmartChineseAnalyzer(Version.LUCENE_47);
 
-            //Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_47);
             QueryParser parser = new MultiFieldQueryParser(Version.LUCENE_47, fields, analyzer);
+            parser.setAllowLeadingWildcard(true); // 允许首字母为通配符.
 
-            //QueryParser parser = new QueryParser(Version.LUCENE_47, "xxx", analyzer);
             Query query = parser.parse(queryStr);
-            TopDocs topDocs = searcher.search(query, 1);
+            TopDocs topDocs = searcher.search(query, limit);
             ScoreDoc[] hits = topDocs.scoreDocs;
 
-            result = new LinkedList<>();
+            if (ArrayUtils.isEmpty(hits)) {
+                return null;
+            }
+
+            l = new LinkedList<>();
             for (ScoreDoc hit : hits) {
                 Document hitDoc = searcher.doc(hit.doc);
-                Object obj = converter.toDto(hitDoc);
-                result.add(obj);
+                E e = converter.toDto(hitDoc);
+                l.add(e);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            e.printStackTrace();
             logger.error("", e);
-            return result;
+            return l;
         } finally {
             IOUtils.closeQuietly(reader);
-            IOUtils.closeQuietly(directory);
         }
-        return result;
+        return l;
     }
+
 
 }

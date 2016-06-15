@@ -6,6 +6,11 @@ package com.noob.storage.utils;
 public class Regex {
 
     /**
+     * 非负整数（正整数 + 0）
+     */
+    public static final String NUMBER = "^[0-9]+$";
+
+    /**
      * IPv4的正则表达式<br/>
      * 0.0.0.0 ~ 255.255.255.255
      */

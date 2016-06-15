@@ -13,21 +13,12 @@ public interface LuceneObject {
     /**
      * 将当前对象转换为lucene可存储的Document
      */
-    public Document asDocument();
+    Document asDocument();
 
     /**
-     * 获取当前对象存储到Lucene中的ID<br/>
-     * 返回结果不允许为空
+     * 获取当前对象的Lucene ID[唯一]
+     * <br/>
+     * lucene更新&删除数据时需要用到
      */
-    public String getLuceneId();
-
-    /**
-     * 返回Lucene存储的数据列名集合
-     */
-    public String[] getLuceneFields();
-
-    /**
-     * 将一个Lucene查询出的Document对象转换为实体类
-     */
-    public LuceneObject getInstance(Document doc);
+    String getLuceneId();
 }

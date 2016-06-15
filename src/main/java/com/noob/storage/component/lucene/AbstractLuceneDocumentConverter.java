@@ -10,6 +10,15 @@ import org.apache.lucene.document.Document;
  * @author luyun
  * @since 2016.06.13
  */
-public abstract class AbstractLuceneDocumentConverter<E> extends AbstractObjectConverter<Document,E> {
+public abstract class AbstractLuceneDocumentConverter<E extends LuceneObject>
+        extends AbstractObjectConverter<Document,E> {
+
+    @Override
+    protected Document onBuildModel(LuceneObject domain) {
+        if (domain == null) {
+            return null;
+        }
+        return domain.asDocument();
+    }
 
 }
