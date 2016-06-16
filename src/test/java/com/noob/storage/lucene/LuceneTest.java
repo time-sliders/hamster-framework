@@ -3,8 +3,15 @@ package com.noob.storage.lucene;
 import com.alibaba.dubbo.common.utils.CollectionUtils;
 import com.alibaba.dubbo.common.utils.StringUtils;
 import com.noob.storage.component.lucene.LuceneComponent;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.Version;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,7 +33,7 @@ public class LuceneTest {
 
     @Test
     public void testQuery() throws Exception {
-        List<User> userList = component.search("华国",
+        List<User> userList = component.search("鹏国",
                 new String[]{"name", "spell", "code"}, new UserLuceneConverter(), 500);
         if (CollectionUtils.isNotEmpty(userList)) {
             userList.forEach(System.out::println);
@@ -47,7 +54,6 @@ public class LuceneTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     @Test
@@ -58,8 +64,42 @@ public class LuceneTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
+
+    /**
+     * 中文切词
+     */
+    @SuppressWarnings("unchecked")
+    public static List<String> analyzerCnStr(String str){
+        List<String> result = new ArrayList();
+        Analyzer analyzer = new SmartChineseAnalyzer(Version.LUCENE_47,true);//指定当前版本为4.6
+        try {
+            TokenStream tokenStream = analyzer.tokenStream("field", str);
+            CharTermAttribute term=tokenStream.addAttribute(CharTermAttribute.class);
+            tokenStream.reset();
+            while( tokenStream.incrementToken() ){
+                result.add( term.toString() );
+            }
+            tokenStream.end();
+            tokenStream.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        return result;
+    }
+
+    @Test
+    public void testAnalyzer() {
+        List<String> l0 = analyzerCnStr("鹏华中国50");
+        System.out.println(l0);
+
+        List<String> l1 = analyzerCnStr("160605");
+        System.out.println(l1);
+
+        List<String> l2 = analyzerCnStr("phzg50");
+        System.out.println(l2);
+    }
+
 
     /**
      * 数字:605 -> *6*0*5*
