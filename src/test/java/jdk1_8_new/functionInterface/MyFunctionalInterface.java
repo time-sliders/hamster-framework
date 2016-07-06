@@ -13,7 +13,7 @@ public interface MyFunctionalInterface {
     String apply(int i);
 
     /**
-     * overwrite java.lang.Object的方法不会作为必须的抽象方法。
+     *  java.lang.Object的方法不会作为必须的抽象方法。
      */
     String toString();
 

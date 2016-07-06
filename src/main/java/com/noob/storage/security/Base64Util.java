@@ -12,7 +12,7 @@ public class Base64Util {
 	 * @param input
 	 *            要加密byte数组
 	 */
-	public static String base64Encode(byte input[]) {
+	private static String base64Encode(byte input[]) {
 		return new String(Base64.encodeBase64(input));
 	}
 
@@ -22,11 +22,11 @@ public class Base64Util {
 	 * @param input
 	 *            要解密的字符串
 	 */
-	public static byte[] base64Decode(String input) {
+	private static byte[] base64Decode(String input) {
 		return Base64.decodeBase64(input);
 	}
 
-	public static String encode(String input, String charsetName) throws UnsupportedEncodingException {
+	private static String encode(String input, String charsetName) throws UnsupportedEncodingException {
 		return new String(Base64.encodeBase64(input.getBytes("UTF-8")), charsetName);
 	}
 

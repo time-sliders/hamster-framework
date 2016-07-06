@@ -82,11 +82,11 @@ public class ResourceDetector {
      * 探测任务
      * <p>每一个任务负责检测一个资源</p>
      */
-    class DetectTask implements Runnable {
+    private class DetectTask implements Runnable {
 
         InitAble i;
 
-        public DetectTask(final InitAble i) {
+        DetectTask(final InitAble i) {
             this.i = i;
         }
 
@@ -109,7 +109,7 @@ public class ResourceDetector {
      * 任务失败<br/>
      * 当所有任务失败之后,唤醒主线程
      */
-    synchronized void taskFail() {
+    private synchronized void taskFail() {
         if (++failCount >= resources.size()) {
             notifyMainThread();
         }
@@ -118,7 +118,7 @@ public class ResourceDetector {
     /**
      * 唤醒主线程
      */
-    void notifyMainThread() {
+    private void notifyMainThread() {
         synchronized (mainThread) {
             mainThread.notify();
         }
