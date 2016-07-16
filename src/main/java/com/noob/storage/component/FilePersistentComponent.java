@@ -1,7 +1,7 @@
 package com.noob.storage.component;
 
-import com.alibaba.dubbo.common.utils.StringUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
