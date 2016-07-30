@@ -230,11 +230,18 @@
       <artifactId>lucene-analyzers-smartcn</artifactId>
       <version>4.7.0</version>
     </dependency>
-    <!-- lucene高亮显示 -->
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-highlighter</artifactId>
       <version>4.7.0</version>
+    </dependency>
+
+
+    <!-- SFTP -->
+    <dependency>
+      <groupId>com.jcraft</groupId>
+      <artifactId>jsch</artifactId>
+      <version>0.1.51</version>
     </dependency>
 
   </dependencies>
