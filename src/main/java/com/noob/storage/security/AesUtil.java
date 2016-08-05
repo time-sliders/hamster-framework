@@ -18,13 +18,13 @@ public class AesUtil {
 
     private static final String keystore = "zhwWas5242501707";
 
-    private static String getKeystore() {
+    public static String getKeystore() {
         return keystore;
     }
 
     private final static String encoding = "UTF-8";
 
-    private static String encryptAES(String content, String password) {
+    public static String encryptAES(String content, String password) {
         try {
             SecretKeySpec secretKeySpec = getKey(password);
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -39,7 +39,7 @@ public class AesUtil {
         }
     }
 
-    private static String decrypt(String content, String password) {
+    public static String decrypt(String content, String password) {
 
         try {
             SecretKeySpec secretKeySpec = getKey(password);

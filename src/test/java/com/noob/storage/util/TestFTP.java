@@ -14,15 +14,11 @@ public class TestFTP {
 
     @Test
     public void testFtpUpload() {
-        FTPClient ftpClient = null;
-        try {
-            ftpClient = FTPClientUtil.connect("192.168.1.101", 21, "test", "123456", "/tmp/");
-            FTPClientUtil.storeFile(new File("/Users/zhangwei/test/ftpTest"),ftpClient);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            FTPClientUtil.closeConnection(ftpClient);
+        String bankCardNo = "sfa";
+        if (bankCardNo.length() > 4) {
+            bankCardNo = bankCardNo.substring(bankCardNo.length() - 4);
         }
+        System.out.println(bankCardNo);
     }
 
     @Test
