@@ -1,4 +1,4 @@
-package jdk1_8_new.defaultInterface;
+package jdk1_8_new.functionInterface;
 
 import org.junit.Test;
 
