@@ -1,8 +1,7 @@
 package com.noob.storage.thread;
 
-import com.noob.storage.exception.BusinessException;
-import com.noob.storage.exception.ErrorCode;
-import com.noob.storage.exception.ProcessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -14,6 +13,8 @@ import java.util.concurrent.TimeUnit;
  * 主要是为了提供一个等待线程池结束的方法(waitFinish())
  */
 public class ThreadPool extends ThreadPoolExecutor {
+
+    private static final Logger logger = LoggerFactory.getLogger(ThreadPool.class);
 
     public ThreadPool(int corePoolSize) {
         super(corePoolSize, corePoolSize,
@@ -27,10 +28,7 @@ public class ThreadPool extends ThreadPoolExecutor {
      * <strong>如果线程池中线程一直无法结束,程序会一直等待</strong>
      */
     public void waitFinish() {
-        try {
-            waitFinish(Integer.MAX_VALUE, TimeUnit.DAYS);
-        } catch (BusinessException ignore) {
-        }
+        waitFinish(Integer.MAX_VALUE, TimeUnit.DAYS);
     }
 
     /**
@@ -38,19 +36,22 @@ public class ThreadPool extends ThreadPoolExecutor {
      *
      * @param timeout 等待的时间
      * @param unit    时间单位
-     * @throws BusinessException 在规定的时间内线程池如果没有结束,抛出异常并强制结束线程池
      */
-    public void waitFinish(long timeout, TimeUnit unit) throws BusinessException {
+    public void waitFinish(long timeout, TimeUnit unit) {
+
         shutdown();
+
         try {
-            awaitTermination(timeout, unit);
-            if (!isTerminated()) {
-                shutdownNow();
-                throw new BusinessException(ErrorCode.POOL_CLOSE_FAIL, "线程池在规定时间内无法结束!");
-            }
+            awaitTermination(timeout, unit);//block
         } catch (InterruptedException e) {
-            throw new ProcessException(e);
+            logger.error(e.getMessage(), e);
         }
+
+        if (!isTerminated()) {
+            shutdownNow();
+            logger.warn("ThreadPoolExecutor can not shutdown with specify timeout.force shutdownNow.");
+        }
+
     }
 
 }
