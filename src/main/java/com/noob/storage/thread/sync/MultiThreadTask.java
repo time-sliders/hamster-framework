@@ -17,12 +17,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 感觉有一点资源浪费,且存在线程竞争。这里采用wait/notify
  * 模式搭建的一个多线程任务,可以达到想要的效果。
  * </p>
+ * <p/>
+ * 样例:
+ * <pre>
+ * ConcurrentMap context = new ConcurrentHashMap();
+ * MultiThreadTask multiThreadTask = new MultiThreadTask(context);
+ * multiThreadTask.addSubTask(new SubTask());
+ * multiThreadTask.addSubTask(new SubTask());
+ * multiThreadTask.start();
+ * </pre>
  *
  * @author luyun
  * @see SubTask
  * @since app6.1
  */
-public final class MultiThreadTask {
+public class MultiThreadTask {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiThreadTask.class);
 
@@ -33,9 +42,11 @@ public final class MultiThreadTask {
     //当前多线程任务是否已经启动(已经启动则不允许再添加子任务)
     private AtomicBoolean isStarted = new AtomicBoolean(false);
     //子线程任务列表
-    private List<SubTask> subThreadTaskList;
+    protected List<SubTask> subThreadTaskList;
     //可作为子线程共享内存,也可存储子线程参数
     private ConcurrentMap<String, Object> context;
+    //主线程最大等待时间(毫秒)
+    private long maxWaitMillis = 1000 * 10L;
 
     public MultiThreadTask(ConcurrentMap<String, Object> context) {
         this.context = context;
@@ -81,7 +92,7 @@ public final class MultiThreadTask {
     /**
      * 启动所有子线程任务
      */
-    private void startAllSubTask() {
+    protected void startAllSubTask() {
 
         // 没有指定子线程任务直接抛异常
         if (CollectionUtils.isEmpty(subThreadTaskList)) {
@@ -112,12 +123,11 @@ public final class MultiThreadTask {
                      * 等待(不要去掉wait的参数,这是对异
                      * 常情况的一个容错,防止主线程死锁)
                      */
-                    this.wait(1000 * 10);
+                    this.wait(maxWaitMillis);
                 } catch (InterruptedException e) {
                     logger.error(e.getMessage(), e);
                 }
             }
-
         }
     }
 
@@ -135,12 +145,19 @@ public final class MultiThreadTask {
         }
     }
 
-    ConcurrentMap<String, Object> getContext() {
+    public ConcurrentMap<String, Object> getContext() {
         return context;
     }
 
     private boolean isAllTaskFinished() {
         return finishedTaskCount >= taskCount;
+    }
+
+    public void setMaxWaitMillis(long maxWaitMillis) {
+        if (maxWaitMillis <= 0) {
+            throw new IllegalArgumentException("maxWaitMillis must bigger than zero!");
+        }
+        this.maxWaitMillis = maxWaitMillis;
     }
 
 }

@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 public class SubTask_1 extends SubTask {
 
     @Override
-    void doBusiness(ConcurrentMap<String, Object> context) {
+    protected void doBusiness(ConcurrentMap<String, Object> context) {
         context.put("income", BigDecimal.ONE);
         try {
             Thread.sleep(1000*3);

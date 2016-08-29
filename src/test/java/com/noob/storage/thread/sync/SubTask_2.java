@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 public class SubTask_2 extends SubTask {
 
     @Override
-    void doBusiness(ConcurrentMap<String, Object> context) {
+    protected void doBusiness(ConcurrentMap<String, Object> context) {
         context.put("caption","1234");
         try {
             Thread.sleep(1000*4);
