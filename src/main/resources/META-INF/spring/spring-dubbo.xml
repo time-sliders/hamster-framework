@@ -14,6 +14,6 @@
     <!-- publish service -->
 
     <!-- reference service -->
-    <dubbo:reference id="mdpMessageManagerFacade" interface="com.tongbanjie.mdp.service.facade.MdpMessageManagerFacade" version="2.0" />
+    <!--<dubbo:reference id="mdpMessageManagerFacade" interface="com.tongbanjie.mdp.service.facade.MdpMessageManagerFacade" version="2.0" />-->
 
 </beans>

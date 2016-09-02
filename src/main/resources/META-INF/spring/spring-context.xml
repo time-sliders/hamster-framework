@@ -17,7 +17,7 @@
 		</property>
 	</bean>
 
-	<import resource="classpath:META-INF/spring/spring-db.xml" />
+	<!--<import resource="classpath:META-INF/spring/spring-db.xml" />-->
 	<import resource="classpath:META-INF/spring/spring-cache.xml" />
 	<import resource="classpath:META-INF/spring/spring-dubbo.xml" />
 	

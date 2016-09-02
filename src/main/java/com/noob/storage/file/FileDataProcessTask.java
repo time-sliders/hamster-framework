@@ -39,7 +39,7 @@ public abstract class FileDataProcessTask extends SubTask {
      */
     public abstract void processLineData(String lineData, ConcurrentMap<String, Object> context);
 
-    public void setReader(MultiThreadFileReaderTask reader) {
+    void setReader(MultiThreadFileReaderTask reader) {
         this.reader = reader;
     }
 }

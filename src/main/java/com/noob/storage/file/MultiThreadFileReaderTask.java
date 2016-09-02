@@ -114,7 +114,7 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
     }
 
     //同步读取
-    public synchronized String take() {
+    synchronized String take() {
 
         if (isAllDataRead && lineDataBuffer.isEmpty()) return null;
 
