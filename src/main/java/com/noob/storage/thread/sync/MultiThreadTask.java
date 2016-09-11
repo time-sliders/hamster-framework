@@ -46,10 +46,15 @@ public class MultiThreadTask {
     //可作为子线程共享内存,也可存储子线程参数
     private ConcurrentMap<String, Object> context;
     //主线程最大等待时间(毫秒)
-    private long maxWaitMillis = 1000 * 10L;
+    private long maxWaitMillis;
 
     public MultiThreadTask(ConcurrentMap<String, Object> context) {
+        this(context, Long.MAX_VALUE);
+    }
+
+    public MultiThreadTask(ConcurrentMap<String, Object> context, long maxWaitMillis) {
         this.context = context;
+        this.maxWaitMillis = maxWaitMillis;
     }
 
     /**

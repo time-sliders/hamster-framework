@@ -5,6 +5,8 @@ import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.noob.storage.component.RedisComponent;
+import com.noob.storage.component.cache.reject.DefaultRejectPolicy;
+import com.noob.storage.component.cache.reject.RejectPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -24,7 +26,6 @@ import java.util.concurrent.TimeUnit;
  * <li>子类务必保证线程安全</li>
  *
  * @author luyun
- * @since app5.9
  */
 public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> implements InitializingBean {
 
@@ -40,7 +41,7 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
     private long timeout = CacheWrapper.HALF_HOUR;
     private Class<R> clazz;
 
-    private RejectPolicy<Q> rejectPolicy = new DefaultRejectPolicy();
+    private RejectPolicy<Q> rejectPolicy = new DefaultRejectPolicy<Q>();
 
     @SuppressWarnings("unchecked")
     public R get(Q param) throws Exception {
@@ -189,16 +190,6 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
      */
     protected abstract String getKey();
 
-    interface RejectPolicy<Q> {
-        void reject(Q param, AsyncCacheEngine engine);
-    }
-
-    private class DefaultRejectPolicy implements RejectPolicy<Q> {
-        public void reject(Q param, AsyncCacheEngine engine) {
-            logger.warn("AsyncCacheEngine [{}] currentKeySet is full! cacheKey:{}",
-                    new Object[]{engine, getMapKey(param)});
-        }
-    }
 
     @SuppressWarnings("unchecked")
     public void afterPropertiesSet() throws Exception {

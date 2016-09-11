@@ -9,9 +9,8 @@ import java.util.concurrent.Callable;
  * 数据加载任务
  *
  * @author luyun
- * @since app5.9
  */
-public class DataLoadTask<Q, R> implements Callable<R> {
+public class DataLoadTask<Q, R> extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(DataLoadTask.class);
 
@@ -19,19 +18,17 @@ public class DataLoadTask<Q, R> implements Callable<R> {
 
     private Q param;
 
-    DataLoadTask(AsyncCacheEngine<Q, R> engine, Q param) {
+    public DataLoadTask(AsyncCacheEngine<Q, R> engine, Q param) {
         this.engine = engine;
         this.param = param;
     }
 
-    public R call() throws Exception {
+    public void run()  {
         try {
             R result = engine.getDataFromSource(param);
             engine.set(param, result);
-            return result;
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
-            return null;
         } finally {
             engine.getCurrentKeySet().remove(engine.getMapKey(param));
         }

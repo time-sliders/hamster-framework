@@ -46,22 +46,22 @@ public class AbstractAdapter<K/*获取执行者的参数类型,一般为String*/
     @SuppressWarnings("unchecked")
     public E getExecutor(K k) {
 
+        String executorBeanName;
+
         if (k == null) {
-            return null;
-        }
-
-        String executorBeanName = executorMapping.get(k);
-
-        if (StringUtils.isBlank(executorBeanName)) {
-
-            if (StringUtils.isNotBlank(defaultExecutor)) {
+            executorBeanName = defaultExecutor;
+        } else {
+            executorBeanName = executorMapping.get(k);
+            if (StringUtils.isBlank(executorBeanName)) {
                 executorBeanName = defaultExecutor;
-            } else {
-                return null;
             }
         }
 
-        return (E) context.getBean(executorBeanName);
+        if (StringUtils.isNotBlank(executorBeanName)) {
+            return (E) context.getBean(executorBeanName);
+        } else {
+            return null;
+        }
     }
 
     public void afterPropertiesSet() throws Exception {

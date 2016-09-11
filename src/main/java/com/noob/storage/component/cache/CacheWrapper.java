@@ -6,7 +6,6 @@ import java.io.Serializable;
  * 缓存数据包装类
  *
  * @author luyun
- * @since app5.9
  */
 public class CacheWrapper implements Serializable{
 
