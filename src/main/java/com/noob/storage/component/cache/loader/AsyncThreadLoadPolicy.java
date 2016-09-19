@@ -1,9 +1,6 @@
 package com.noob.storage.component.cache.loader;
 
-import com.noob.storage.component.cache.AsyncCacheEngine;
 import com.noob.storage.component.cache.DataLoadTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 异步新线程数据加载策略<br/>
@@ -12,10 +9,19 @@ import org.slf4j.LoggerFactory;
  *
  * @author luyun
  */
-public class AsyncThreadLoadPolicy<Q, T> {
+public class AsyncThreadLoadPolicy implements LoadPolicy{
 
-    public void asyncLoadData(Q q, AsyncCacheEngine<Q, T> engine) {
-        new DataLoadTask<Q, T>(engine, q).start();
+    private static LoadPolicy instance = new AsyncThreadLoadPolicy();
+
+    public static LoadPolicy getInstance(){
+        return instance;
+    }
+
+    private AsyncThreadLoadPolicy() {
+    }
+
+    public void asyncLoadData(DataLoadTask loadTask) {
+        loadTask.start();
     }
 
 }

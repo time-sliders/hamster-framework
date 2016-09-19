@@ -7,7 +7,7 @@ import com.noob.storage.component.cache.AsyncCacheEngine;
  *
  * @author luyun
  */
-public interface RejectPolicy<Q> {
+public interface RejectPolicy {
 
-    void reject(Q param, AsyncCacheEngine engine);
+    void reject(Object param, AsyncCacheEngine engine);
 }

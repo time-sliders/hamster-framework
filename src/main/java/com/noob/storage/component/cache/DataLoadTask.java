@@ -1,5 +1,6 @@
 package com.noob.storage.component.cache;
 
+import com.noob.storage.component.cache.loader.LoadPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,22 +11,29 @@ import java.util.concurrent.Callable;
  *
  * @author luyun
  */
-public class DataLoadTask<Q, R> extends Thread {
+public class DataLoadTask extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(DataLoadTask.class);
 
-    private AsyncCacheEngine<Q, R> engine;
+    private AsyncCacheEngine engine;
 
-    private Q param;
+    private LoadPolicy loadPolicy;
 
-    public DataLoadTask(AsyncCacheEngine<Q, R> engine, Q param) {
+    private Object param;
+
+    public DataLoadTask(AsyncCacheEngine engine, Object param, LoadPolicy loadPolicy) {
         this.engine = engine;
         this.param = param;
+        this.loadPolicy = loadPolicy;
     }
 
-    public void run()  {
+    public void load() {
+        loadPolicy.asyncLoadData(this);
+    }
+
+    public void run() {
         try {
-            R result = engine.getDataFromSource(param);
+            Object result = engine.getDataFromSource(param);
             engine.set(param, result);
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
@@ -34,15 +42,15 @@ public class DataLoadTask<Q, R> extends Thread {
         }
     }
 
-    void setEngine(AsyncCacheEngine<Q, R> engine) {
+    void setEngine(AsyncCacheEngine engine) {
         this.engine = engine;
     }
 
-    public Q getParam() {
+    public Object getParam() {
         return param;
     }
 
-    public void setParam(Q param) {
+    public void setParam(Object param) {
         this.param = param;
     }
 

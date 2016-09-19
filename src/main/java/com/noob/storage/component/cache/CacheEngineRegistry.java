@@ -1,6 +1,8 @@
 package com.noob.storage.component.cache;
 
+import com.noob.storage.http.base.Property;
 import com.noob.storage.pattern.adapter.AbstractAdapter;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -9,10 +11,10 @@ import org.springframework.stereotype.Component;
  * @author luyun
  */
 @Component
-public class CacheEngineRegistry extends AbstractAdapter<String,AsyncCacheEngine>{
+public class CacheEngineRegistry extends AbstractAdapter<Class, AsyncCacheEngine> implements InitializingBean {
 
-    public void registry(Class cacheClass,AsyncCacheEngine engine){
-
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        registerExecutor(Property.class, null);
     }
-
 }

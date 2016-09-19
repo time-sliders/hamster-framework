@@ -1,12 +1,10 @@
 package com.noob.storage.component.cache;
 
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
-import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.noob.storage.component.RedisComponent;
-import com.noob.storage.component.cache.reject.DefaultRejectPolicy;
-import com.noob.storage.component.cache.reject.RejectPolicy;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -14,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,10 +27,11 @@ import java.util.concurrent.TimeUnit;
  *
  * @author luyun
  */
-public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> implements InitializingBean {
+public abstract class AsyncCacheEngine implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCacheEngine.class);
 
+    @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
     private RedisComponent redisComponent;
     //当前正在执行的包括等待的key的集合
@@ -39,28 +40,58 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
     private ThreadPoolExecutor pool;
     //缓存数据超时时间
     private long timeout = CacheWrapper.HALF_HOUR;
-    private Class<R> clazz;
+    private Class clazz;
 
-    private RejectPolicy<Q> rejectPolicy = new DefaultRejectPolicy<Q>();
+    /**
+     * 配置MAP,不同的Class根据不同的配置来查找数据
+     */
+    private Map<Class, DataLoadConfig> configMap = new HashMap<>();
 
-    @SuppressWarnings("unchecked")
-    public R get(Q param) throws Exception {
+    private Object get(Class clazz) {
+        DataLoadConfig config = configMap.get(clazz);
+        if (config == null) {
+            throw new RuntimeException("异步缓存引擎无对应的配置,class:" + clazz);
+        }
+        return get(config);
+    }
 
-        String key = getMapKey(param);
+    /**
+     * 添加一个配置
+     */
+    public boolean addConfig(DataLoadConfig config) {
+        return config != null
+                && config.selfCheck()
+                && configMap.put(config.getDataType(), config) != null;
+    }
+
+    /**
+     * 引擎应该是通过配置去加载数据
+     * 而不是每一个配置创建一个对应的引擎
+     *
+     * @param config 数据加载配置
+     */
+    private Object get(DataLoadConfig config) {
+        String key = config.getKey();
         if (StringUtils.isBlank(key)) {
             return null;
         }
 
-        CacheWrapper wrapper = redisComponent.hget(getKey(), key, CacheWrapper.class);
+        CacheWrapper wrapper;
+        if (StringUtils.isNotBlank(config.getMapKey())) {
+            wrapper = redisComponent.hget(key, config.getMapKey(), CacheWrapper.class);
+        } else {
+            wrapper = redisComponent.get(key, CacheWrapper.class);
+        }
 
         //如果缓存中没有数据,直接同步去数据源查询
         if (wrapper == null) {
-            return syncLoadData(param);
+            config.getLoadPolicy().asyncLoadData(config.getDataLoadTask());
+            return null;
         }
 
         //如果缓存有数据且已经超时,那么通知异步线程去尝试获取新数据
         if (wrapper.alreadyTimeout()) {
-            asyncReloadData(param);
+            config.getLoadPolicy().asyncLoadData(config.getDataLoadTask());
         }
 
         Object object = wrapper.getData();
@@ -74,7 +105,7 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
     /**
      * 将数据保存到Redis缓存中
      */
-    public void set(Q param, R obj) {
+    public void set(Object param, Object obj) {
 
         if (obj == null || param == null) {
             return;
@@ -88,7 +119,7 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
     /**
      * 异步重新加载数据
      */
-    private synchronized void asyncReloadData(Q param) {
+    private synchronized void asyncReloadData(Object param, DataLoadConfig loadConfig) {
         String cacheKey = getMapKey(param);
         try {
 
@@ -99,12 +130,12 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
 
             //超过最大等待长度,根据拒绝策略拒绝请求
             if (currentKeySet.size() >= getMaxWaitSize()) {
-                rejectPolicy.reject(param, this);
+                loadConfig.getRejectPolicy().reject(param, this);
                 return;
             }
 
             //添加任务到等待队列
-            DataLoadTask<Q, R> task = new DataLoadTask<Q, R>(this, param);
+            DataLoadTask task = new DataLoadTask(this, param, loadConfig.getLoadPolicy());
             task.setEngine(this);
             task.setParam(param);
             currentKeySet.add(cacheKey);
@@ -118,9 +149,9 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
     /**
      * 同步获取数据
      */
-    private R syncLoadData(Q param) throws Exception {
+    private Object syncLoadData(Object param) throws Exception {
 
-        R result = getDataFromSource(param);
+        Object result = getDataFromSource(param);
 
         this.set(param, result);
 
@@ -137,7 +168,7 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
     /**
      * 删除某一条缓存
      */
-    public Long deleteCache(Q param) {
+    public Long deleteCache(Object param) {
         return redisComponent.del(getMapKey(param));
     }
 
@@ -169,19 +200,15 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
         this.timeout = timeout;
     }
 
-    public void setRejectPolicy(RejectPolicy<Q> rejectPolicy) {
-        this.rejectPolicy = rejectPolicy;
-    }
-
     /**
      * 从数据源重新获取数据
      */
-    protected abstract R getDataFromSource(Q param) throws Exception;
+    protected abstract Object getDataFromSource(Object param) throws Exception;
 
     /**
      * 获取对象在缓存的Map中的Key值
      */
-    protected abstract String getMapKey(Q param);
+    protected abstract String getMapKey(Object param);
 
     /**
      * 一个引擎管理同一类数据,
@@ -202,7 +229,7 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
         }
 
         Type genType = getClass().getGenericSuperclass();
-        clazz = (Class<R>) ((ParameterizedType) genType).getActualTypeArguments()[1];
+        clazz = (Class) ((ParameterizedType) genType).getActualTypeArguments()[1];
     }
 
     public void setPoolSize(int poolSize) {

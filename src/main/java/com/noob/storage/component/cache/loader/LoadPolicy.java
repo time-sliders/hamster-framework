@@ -1,14 +1,14 @@
 package com.noob.storage.component.cache.loader;
 
-import com.noob.storage.component.cache.AsyncCacheEngine;
+import com.noob.storage.component.cache.DataLoadTask;
 
 /**
  * 数据加载策略
  *
  * @author luyun
  */
-public interface LoadPolicy<Q, T> {
+public interface LoadPolicy {
 
-    void asyncLoadData(Q q, AsyncCacheEngine<Q, T> engine);
+    void asyncLoadData(DataLoadTask loadTask);
 
 }
