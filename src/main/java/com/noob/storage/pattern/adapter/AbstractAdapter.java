@@ -1,5 +1,7 @@
 package com.noob.storage.pattern.adapter;
 
+import org.apache.commons.collections.MapUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +24,7 @@ public class AbstractAdapter<K/*适配器路由参数类型*/, E/*适配器返�
     }
 
     // 注册一个执行者
-    protected void registerExecutor(K k, E e) {
+    public void register(K k, E e) {
         executorMapping.put(k, e);
     }
 
@@ -43,6 +45,12 @@ public class AbstractAdapter<K/*适配器路由参数类型*/, E/*适配器返�
         }
 
         return executor;
+    }
+
+    public void afterPropertiesSet() throws Exception {
+        if (defaultExecutor == null && MapUtils.isEmpty(executorMapping)) {
+            throw new RuntimeException(getClass() + "尚未注册执行者");
+        }
     }
 
 }

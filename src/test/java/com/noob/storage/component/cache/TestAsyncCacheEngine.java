@@ -1,5 +1,6 @@
 package com.noob.storage.component.cache;
 
+import com.noob.storage.component.cache.config.SingleCacheConfig;
 import com.noob.storage.http.base.Property;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ public class TestAsyncCacheEngine {
     private CacheEngineRegistry cacheEngineRegistry;
 
     public void testE() throws Exception {
+        cacheEngineRegistry.register(Property.class, new SingleCacheConfig("TEST_PROPERTY_KEY", Property.class, null));
     }
 
 }

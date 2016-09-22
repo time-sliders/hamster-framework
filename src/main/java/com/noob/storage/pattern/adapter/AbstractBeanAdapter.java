@@ -31,7 +31,7 @@ public class AbstractBeanAdapter<K, E> extends AbstractAdapter<K, E>
     @SuppressWarnings("unchecked")
     protected void registerExecutor(K k, String executorBeanName) {
         if (k != null && StringUtils.isNotBlank(executorBeanName)) {
-            registerExecutor(k, (E) context.getBean(executorBeanName));
+            register(k, (E) context.getBean(executorBeanName));
         }
     }
 
@@ -53,12 +53,6 @@ public class AbstractBeanAdapter<K, E> extends AbstractAdapter<K, E>
         }
 
         return executorBean;
-    }
-
-    public void afterPropertiesSet() throws Exception {
-        if (defaultExecutor == null && MapUtils.isEmpty(executorMapping)) {
-            throw new RuntimeException(getClass() + "尚未注册执行者");
-        }
     }
 
 }

@@ -1,5 +1,6 @@
-package com.noob.storage.component.cache;
+package com.noob.storage.component.cache.config;
 
+import com.noob.storage.component.cache.DataLoadTask;
 import com.noob.storage.component.cache.loader.AsyncThreadLoadPolicy;
 import com.noob.storage.component.cache.loader.LoadPolicy;
 import com.noob.storage.component.cache.reject.DefaultRejectPolicy;
@@ -20,43 +21,22 @@ public class DataLoadConfig implements Serializable{
     private static final long serialVersionUID = 2091645502978039710L;
 
     //缓存key
-    private String key;
-
-    //缓存map中的key
-    private String mapKey;
+    protected String key;
 
     //数据加载策略
-    private LoadPolicy loadPolicy;
+    protected LoadPolicy loadPolicy;
 
     //拒绝策略
-    private RejectPolicy rejectPolicy;
+    protected RejectPolicy rejectPolicy;
 
     //数据类型
-    private Class dataType;
+    protected Class dataType;
 
     //数据加载任务
-    private DataLoadTask dataLoadTask;
-
-    public DataLoadConfig(String key, String mapKey, Class dataType) {
-        this(key, mapKey, AsyncThreadLoadPolicy.getInstance(),
-                DefaultRejectPolicy.getInstance(), dataType);
-    }
-
-    public DataLoadConfig(String key, String mapKey, LoadPolicy loadPolicy,
-                          RejectPolicy rejectPolicy, Class dataType) {
-        this.key = key;
-        this.mapKey = mapKey;
-        this.loadPolicy = loadPolicy;
-        this.rejectPolicy = rejectPolicy;
-        this.dataType = dataType;
-    }
+    protected DataLoadTask dataLoadTask;
 
     public String getKey() {
         return key;
-    }
-
-    public String getMapKey() {
-        return mapKey;
     }
 
     public LoadPolicy getLoadPolicy() {

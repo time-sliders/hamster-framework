@@ -4,6 +4,7 @@ import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.noob.storage.component.RedisComponent;
+import com.noob.storage.component.cache.config.DataLoadConfig;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
