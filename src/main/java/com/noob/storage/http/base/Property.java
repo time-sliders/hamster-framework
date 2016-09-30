@@ -29,6 +29,10 @@ public class Property {
         return name;
     }
 
+    public static String staticGetter(){
+        return "Hello World";
+    }
+
     public void setName(String name) {
         this.name = name;
     }

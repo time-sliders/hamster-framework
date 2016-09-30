@@ -78,8 +78,8 @@ public abstract class AsyncCacheEngine implements InitializingBean {
         }
 
         CacheWrapper wrapper;
-        if (StringUtils.isNotBlank(config.getMapKey())) {
-            wrapper = redisComponent.hget(key, config.getMapKey(), CacheWrapper.class);
+        if (StringUtils.isNotBlank(config.getKey())) {
+            wrapper = redisComponent.hget(key, config.getKey(), CacheWrapper.class);
         } else {
             wrapper = redisComponent.get(key, CacheWrapper.class);
         }

@@ -1,6 +1,7 @@
 package com.noob.storage.zookeeper.watcher;
 
 import com.noob.storage.pattern.adapter.AbstractAdapter;
+import com.noob.storage.pattern.adapter.AbstractBeanAdapter;
 import com.noob.storage.zookeeper.watcher.handler.ZookeeperEventHandler;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DefaultZookeeperWatcher
-        extends AbstractAdapter<Watcher.Event.KeeperState, ZookeeperEventHandler>
+        extends AbstractBeanAdapter<Watcher.Event.KeeperState, ZookeeperEventHandler>
         implements Watcher {
 
     @Override
@@ -26,10 +27,7 @@ public class DefaultZookeeperWatcher
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        registerExecutor(Event.KeeperState.Expired, "expiredEventHandler");
-        registerExecutor(Event.KeeperState.SyncConnected, "syncConnectedEventHandler");
-        registerExecutor(Event.KeeperState.Disconnected, "disconnectedEventHandler");
-        registerExecutor(Event.KeeperState.AuthFailed, "authFailedEventHandler");
+
         super.afterPropertiesSet();
     }
 }
