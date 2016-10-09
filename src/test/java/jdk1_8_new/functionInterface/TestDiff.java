@@ -16,6 +16,18 @@ public class TestDiff {
         Consumer<String> c1 =       System.out::print;
         Supplier<Exception> s1 =    RuntimeException::new;
 
+        p.test("Java");
+//        (s -> s != null).test("Javas");
+//        ((String s) -> s != null).test("Java");
+
+        NewPredicate<String> p2 =           s -> s != null;
+        p2.assertNotNull("Java");
+
+    }
+
+    @FunctionalInterface
+    interface NewPredicate<T>{
+        boolean assertNotNull(T t);
     }
 
 }

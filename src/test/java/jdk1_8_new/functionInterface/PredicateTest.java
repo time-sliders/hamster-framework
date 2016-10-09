@@ -27,5 +27,6 @@ public class PredicateTest {
 
         Predicate<String> isNotEmpty = isEmpty.negate();
         System.out.println(isNotEmpty.test(NAME));              // true
+
     }
 }
