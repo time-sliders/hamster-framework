@@ -1,4 +1,4 @@
-package com.noob.storage.lock;
+package jdk1_8_new.lock;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;

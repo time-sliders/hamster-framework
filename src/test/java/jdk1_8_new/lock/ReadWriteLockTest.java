@@ -1,6 +1,5 @@
-package com.noob.storage.lock;
+package jdk1_8_new.lock;
 
-import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -15,7 +14,7 @@ public class ReadWriteLockTest {
     private static Lock readLock = lock.readLock();
     private static Lock writeLock = lock.writeLock();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         new WriteThread().start();
         new WriteThread().start();
         new ReadThread().start();

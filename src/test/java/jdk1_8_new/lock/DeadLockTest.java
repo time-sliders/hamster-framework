@@ -1,4 +1,4 @@
-package com.noob.storage.lock;
+package jdk1_8_new.lock;
 
 public class DeadLockTest {
 

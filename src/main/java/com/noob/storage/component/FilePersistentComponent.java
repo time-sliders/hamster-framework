@@ -32,7 +32,7 @@ public class FilePersistentComponent {
         // 确认&创建公告文件目录
         File dir = new File(filePath);
         if (!dir.exists() && !dir.mkdirs()) {
-            throw new RuntimeException("无法创建文件[" + dir.getAbsolutePath() + "],请检测磁盘以及路径情况");
+            throw new IOException("无法创建文件[" + dir.getAbsolutePath() + "],请确认路径权限,inode等情况");
         }
 
         // 确认文件不存在
@@ -60,7 +60,7 @@ public class FilePersistentComponent {
         // 确认&创建文件目录
         File dir = new File(filePath);
         if (!dir.exists() && !dir.mkdirs()) {
-            throw new RuntimeException("无法创建目录[" + dir.getAbsolutePath() + "],请检测磁盘以及路径情况");
+            throw new IOException("无法创建目录[" + dir.getAbsolutePath() + "],请确认路径权限");
         }
 
         // 确认文件不存在
@@ -71,14 +71,14 @@ public class FilePersistentComponent {
 
         // 创建新文件
         if (!file.createNewFile()) {
-            throw new RuntimeException("无法创建文件[" + file.getAbsolutePath() + "],请检测磁盘以及路径情况");
+            throw new IOException("无法创建文件[" + file.getAbsolutePath() + "],请确认路径权限,inode等情况");
         }
 
         // 将数据写入到临时文件
         try {
             FileUtils.writeStringToFile(file, content);
         } catch (IOException e) {
-            throw new RuntimeException("数据写入文件失败[" + file.getAbsolutePath() + "],请检测磁盘以及路径情况");
+            throw new IOException("数据写入文件失败[" + file.getAbsolutePath() + "],请检查磁盘容量情况");
         }
 
     }
