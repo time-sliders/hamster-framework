@@ -8,12 +8,10 @@ import java.nio.channels.SocketChannel;
 
 /**
  * handler 
- * accpet 构造器里面执行相应的处理
+ * accept 构造器里面执行相应的处理
  * read  read()
  * write  write()
  * 的handler
- * 
- * @author zbz
  *
  */
 public class EventHandler implements Runnable {
@@ -24,9 +22,9 @@ public class EventHandler implements Runnable {
 
 	// socket默认 缓冲区
 
-	static final int READING = 0;
-	static final int SENDING = 1;
-	int state = READING;
+	private static final int READING = 0;
+	private static final int SENDING = 1;
+	private int state = READING;
 
 	EventHandler(Selector selector, SocketChannel socketChannel) throws IOException {
 		this.socketChannel = socketChannel;

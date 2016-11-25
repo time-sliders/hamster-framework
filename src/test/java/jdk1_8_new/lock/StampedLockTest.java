@@ -20,23 +20,11 @@ public class StampedLockTest {
         long stamp4 = lock.readLock();
         long stamp5 = lock.readLock();
 
-        lock.unlock(stamp1);
-        lock.unlock(stamp2);
-        lock.unlock(stamp3);
-        lock.unlock(stamp4);
         lock.unlock(stamp5);
-        System.out.println(lock.isReadLocked());
-    }
-
-    /**
-     * unlock 与 stamp
-     * 257-382
-     */
-    @Test
-    public void test2() {
-        StampedLock lock = new StampedLock();
-        long stamp1 = lock.readLock();
-        lock.unlock(383L);
+        lock.unlock(stamp4);
+        lock.unlock(stamp3);
+        lock.unlock(stamp2);
+        lock.unlock(stamp1);
         System.out.println(lock.isReadLocked());
     }
 
@@ -50,29 +38,28 @@ public class StampedLockTest {
             System.out.println(stamp);
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 2; i++) {
             stamp = lock.readLock();
             System.out.println(stamp);
         }
 
         System.out.println();
-        for (int i = 0; i < 130; i++) {
-            lock.unlock(258);
+        for (int i = 0; i < 100; i++) {
+            lock.unlock(300L);
         }
         System.out.println();
     }
 
     /**
-     * 读锁阻塞写锁,写锁阶段性公平策略
-     * <p>
-     * 384
+     * unlock 与 stamp
+     * 257-383
      */
     @Test
-    public void test4() {
+    public void test2() {
         StampedLock lock = new StampedLock();
-        long stamp;
-        stamp = lock.writeLock();
-        System.out.println(stamp);
+        long stamp1 = lock.readLock();
+        lock.unlock(383L);
+        System.out.println(lock.isReadLocked());
     }
 
     // 使用

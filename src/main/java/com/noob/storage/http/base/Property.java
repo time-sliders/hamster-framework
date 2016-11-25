@@ -3,7 +3,6 @@ package com.noob.storage.http.base;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * HTTP交互的参数对象
  */
 public class Property {
 

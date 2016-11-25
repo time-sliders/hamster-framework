@@ -2,36 +2,36 @@ package jdk1_8_new.stream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class StreamTest {
 
     public static void main(String[] args) {
 
-        // Stream 的创建
-        /*
-        Stream<String> ss;
-        ss = new ArrayList<String>().stream();  //java.util.Collection
-        ss = Stream.generate(String::new);
-        ss = Stream.of("1", "2", "3");
+        List<String> stringList = new ArrayList<>();
+        stringList.add("1");
+        stringList.add("2");
+        stringList.add("3");
 
-        // Stream 的转换
-        ss.filter(s -> s.length() > 5);
-        ss.mapToInt(Integer::valueOf);
-        ss.sorted((a, b) -> a.length() - b.length());
-        ss.limit(10);
+        /**
+         * 创建
+         */
+        Stream<String> ss = stringList.stream().parallel();
 
-        // Stream 的聚合
-        ss.collect(Collectors.toList());
-        ss.count();
-        */
+        /**
+         * 处理
+         */
+        IntStream is;
+        is = ss.mapToInt(Integer::valueOf);
+        is = is.filter((i) -> i < 3);
 
-        List<Integer> il = Stream.of("1", "2", "3")
-                .mapToInt(Integer::valueOf)
-                .filter((i) -> i > 2)
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        /**
+         * 结束操作
+         */
+        boolean isAllMatch = is.allMatch((i) -> i < 5);
 
-        System.out.println(il);
+        System.out.println(isAllMatch);
 
     }
 }

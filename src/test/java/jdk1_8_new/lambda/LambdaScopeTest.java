@@ -13,7 +13,7 @@ public class LambdaScopeTest {
     @Test
     public void testLambdaScope() {
 
-        String methodStr = "methodStr";
+        final String methodStr = "methodStr";
 
         Consumer<String> cs1 = s -> System.out.println(this.getClass() + ":" + sfStr + "_" + propertyString + "_" + methodStr + "_" + s);
         cs1.accept("Java");
@@ -26,7 +26,6 @@ public class LambdaScopeTest {
         };
         cs2.accept("java");
 
-        //methodStr = "aaaaa";
 
         //class jdk1_8_new.lambda.LambdaScopeTest:staticString_propertyString_methodStr_Java
         //class jdk1_8_new.lambda.LambdaScopeTest$1:staticString_propertyString_methodStr_java

@@ -9,24 +9,6 @@ import java.util.function.Supplier;
 
 public class TestLambda {
 
-    public static void main(String[] args) {
-
-        /**
-         * lambda 表达式是一个拥有上下文相关类型的表达式
-         */
-        AddFunction lambda = (a, b) -> a + b;
-
-        AddFunction anonymous = new AddFunction() {
-            @Override
-            public int add(int a, int b) {
-                return a + b;
-            }
-        };
-
-        System.out.println(lambda.add(1, 2));
-        System.out.println(anonymous.add(1, 2));
-    }
-
     public void testLambda() {
 
         /**
@@ -58,8 +40,3 @@ public class TestLambda {
     }
 }
 
-interface AddFunction {
-
-    int add(int a, int b);
-
-}

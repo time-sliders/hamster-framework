@@ -16,7 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class AesUtil {
 
-    private static final String keystore = "zhwWas5242501707";
+    private static final String keystore = "zhwWasHere";
 
     public static String getKeystore() {
         return keystore;
