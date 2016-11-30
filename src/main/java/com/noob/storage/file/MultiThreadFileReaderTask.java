@@ -83,14 +83,14 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
         lock.lock();
         try {
 
-            /**
+            /*
              * 文件数据读取线程
              * 这一行代码必须要在lock锁里面,否则子线程先signal,主线程再
              * await 会出现主线程无法结束
              */
             new FileReaderTask().start();
 
-            /**
+            /*
              * 等待文件中第一行数据被读取
              * 这个控制是为了防止出现空文件时,消费线程已经进入take()等待
              * 但是提供线程尚未开始读文件,当提供线程发现文件为空,并且设置
@@ -150,7 +150,7 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             } finally {
-                /**
+                /*
                  * 容错处理,防止死锁
                  */
                 isAllDataRead = true;

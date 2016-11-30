@@ -85,7 +85,7 @@ public class MIOEngine {
         int count;
         byte[] buffer;
         try {
-            /**
+            /*
              * while循环必须要new 一个新的byte[]
              * 不然缓冲队列buffers里面全是同一个对象
              * */
