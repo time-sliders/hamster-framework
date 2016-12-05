@@ -1,4 +1,4 @@
-package com.noob.storage.io.nio;
+package com.noob.storage.nio;
 
 import java.io.IOException;
 import java.net.InetAddress;

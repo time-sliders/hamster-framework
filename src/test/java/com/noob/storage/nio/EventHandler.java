@@ -1,4 +1,4 @@
-package com.noob.storage.io.nio;
+package com.noob.storage.nio;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -7,12 +7,11 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 /**
- * handler 
+ * handler
  * accept 构造器里面执行相应的处理
  * read  read()
  * write  write()
  * 的handler
- *
  */
 public class EventHandler implements Runnable {
 	
@@ -21,7 +20,6 @@ public class EventHandler implements Runnable {
 	private final SelectionKey key;
 
 	// socket默认 缓冲区
-
 	private static final int READING = 0;
 	private static final int SENDING = 1;
 	private int state = READING;
