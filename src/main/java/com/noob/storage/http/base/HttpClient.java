@@ -67,12 +67,9 @@ public class HttpClient {
      * <b>
      * HTTP连接中服务端只可以返回一次消息,所以该方法在一个instance中只可以调用一次
      * </b>
-     *
-     * @throws IOException
      */
     public String read() throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             int count = 0;
             byte[] buf = new byte[1024 * 8];
             while ((count = conn.getInputStream().read(buf)) != -1) {
@@ -80,8 +77,6 @@ public class HttpClient {
                 bos.flush();
             }
             return new String(bos.toByteArray(), "UTF-8");
-        } finally {
-            bos.close();
         }
     }
 

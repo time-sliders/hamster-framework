@@ -274,5 +274,10 @@
       <artifactId>mybatis-spring</artifactId>
       <version>1.0.2</version>
     </dependency>
+      <dependency>
+          <groupId>org.apache.poi</groupId>
+          <artifactId>poi</artifactId>
+          <version>3.13</version>
+      </dependency>
   </dependencies>
 </project>

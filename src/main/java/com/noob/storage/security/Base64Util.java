@@ -38,6 +38,5 @@ public class Base64Util {
 		System.out.println(base64Encode("zhwwashere".getBytes()));
 		System.out.println(new String(base64Decode("emh3d2FzaGVyZQ==")));
 		System.out.println(encode("zhwwashere", "UTF-8"));
-		
 	}
 }
