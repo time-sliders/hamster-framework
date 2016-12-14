@@ -70,7 +70,7 @@ public class NIOServer implements Runnable {
                         continue;
                     }
 
-                    dispatch(sk);
+                    //dispatch(sk);
                 }
             }
         } catch (IOException e) {
