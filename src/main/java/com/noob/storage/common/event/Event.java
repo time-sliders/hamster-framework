@@ -12,7 +12,7 @@ public class Event {
     /**
      * Whether this event has been consumed by any filter or handler.
      */
-    protected boolean consumed;
+    protected volatile boolean consumed;
 
     /**
      * Indicates whether this {@code Event} has been consumed by any filter or
