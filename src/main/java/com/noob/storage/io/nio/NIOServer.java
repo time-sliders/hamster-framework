@@ -86,4 +86,9 @@ public class NIOServer implements Runnable {
         }
     }
 
+    private void dispatch(SelectionKey sk) {
+        Runnable skAttach = (Runnable) sk.attachment();
+        skAttach.run();
+    }
+
 }
