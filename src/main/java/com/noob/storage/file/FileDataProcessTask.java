@@ -18,6 +18,8 @@ public abstract class FileDataProcessTask extends SubTask {
 
     private MultiThreadFileReaderTask reader;
 
+    private int mode;
+
     public void doBusiness(ConcurrentMap<String, Object> context) {
 
         String lineData;//文件中的一行数据
@@ -42,4 +44,23 @@ public abstract class FileDataProcessTask extends SubTask {
     void setReader(MultiThreadFileReaderTask reader) {
         this.reader = reader;
     }
+
+    void setMode(int mode) {
+        this.mode = mode;
+    }
+
+    /**
+     * 子任务模式
+     */
+    interface Mode {
+        /**
+         * 读取模式
+         */
+        int Read = 0;
+        /**
+         * 处理模式
+         */
+        int Execute = 1;
+    }
+
 }

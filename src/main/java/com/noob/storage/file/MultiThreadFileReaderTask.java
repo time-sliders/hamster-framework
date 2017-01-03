@@ -26,12 +26,12 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see FileDataProcessTask
  * @since app6.1
  */
-public class MultiThreadFileReaderTask extends MultiThreadTask {
+public class MultiThreadFileReaderTask<T extends FileDataProcessTask> extends MultiThreadTask {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiThreadFileReaderTask.class);
     private static final long ONE_HOUR = 1000 * 60 * 60;
 
-    //共享Reader
+    //共享Reader TODO close
     private BufferedReader reader;
     //文件数据是否已经全部处理完
     private volatile boolean isAllDataRead = false;
@@ -42,31 +42,36 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
     //第一行数据是否已经被读取
     private Condition firstLineReadCondition = lock.newCondition();
 
+    private Class clazz;
+
     /**
      * @param file      需要处理的文件
      * @param threadNum 需要几个线程处理
-     * @param clazz     处理类
      * @param context   上下文,共享参数
-     * @param <T>       文件处理子类类型
      */
-    public <T extends FileDataProcessTask> MultiThreadFileReaderTask(File file,
-                                                                     int threadNum,
-                                                                     Class<T> clazz,
-                                                                     ConcurrentMap<String, Object> context) {
+    public MultiThreadFileReaderTask(File file,
+                                     int threadNum,
+                                     Class<T> clazz,
+                                     ConcurrentMap<String, Object> context) {
         super(context);
 
         if (file == null || !file.exists() || !file.isFile()) {
             throw new RuntimeException("invalid file!");
         }
 
-        threadNum = threadNum <= 0 || threadNum > 10 ? 3 : threadNum;
+        threadNum = threadNum <= 1 || threadNum > 10 ? 3 : threadNum;
 
         try {
             this.reader = new BufferedReader(new FileReader(file));
-            for (int i = 0; i < threadNum; i++) {
-                T task = clazz.newInstance();
-                task.setReader(this);
-                addSubTask(task);
+            this.clazz = clazz;
+            /*
+             * 初始时:1个读取线程,n-1 个处理线程
+             */
+            for (int i = 0; i < threadNum - 1; i++) {
+                FileDataProcessTask readTask = clazz.newInstance();
+                readTask.setMode(FileDataProcessTask.Mode.Execute);
+                readTask.setReader(this);
+                addSubTask(readTask);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -88,7 +93,9 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
              * 这一行代码必须要在lock锁里面,否则子线程先signal,主线程再
              * await 会出现主线程无法结束
              */
-            new FileReaderTask().start();
+            FileDataProcessTask readTask = (FileDataProcessTask) clazz.newInstance();
+            readTask.setMode(FileDataProcessTask.Mode.Read);
+            readTask.start();
 
             /*
              * 等待文件中第一行数据被读取
@@ -101,7 +108,7 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
              */
             firstLineReadCondition.await();
 
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             if (lock.isLocked()) lock.unlock();
@@ -127,42 +134,40 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
     }
 
     //**********************异步文件读取线程**********************
-    private class FileReaderTask extends Thread {
-        @Override
-        public void run() {
-            lock.lock();
-            try {
-                int i = 0;
-                while (!isAllDataRead) {
-                    String s = reader.readLine();
+    private int dealCount = 0;
 
-                    if (s == null) {
-                        isAllDataRead = true;
-                    } else {
-                        lineDataBuffer.put(s);
-                    }
+    void read() {
+        lock.lock();
+        try {
+            while (!isAllDataRead) {
+                String s = reader.readLine();
 
-                    // 第一行数据读取完通知主线程
-                    if (i++ == 0) {
-                        signalAndReleaseLock();
-                    }
+                if (s == null) {
+                    isAllDataRead = true;
+                } else {
+                    lineDataBuffer.put(s);
                 }
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            } finally {
-                /*
-                 * 容错处理,防止死锁
-                 */
-                isAllDataRead = true;
-                signalAndReleaseLock();
-            }
-        }
 
-        void signalAndReleaseLock() {
-            if (lock.isLocked()) {
-                firstLineReadCondition.signal();
-                lock.unlock();
+                // 第一行数据读取完通知主线程
+                if (dealCount++ == 0) {
+                    signalAndReleaseLock();
+                }
             }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        } finally {
+            /*
+             * 容错处理,防止死锁
+             */
+            isAllDataRead = true;
+            signalAndReleaseLock();
+        }
+    }
+
+    private void signalAndReleaseLock() {
+        if (lock.isLocked()) {
+            firstLineReadCondition.signal();
+            lock.unlock();
         }
     }
 }
