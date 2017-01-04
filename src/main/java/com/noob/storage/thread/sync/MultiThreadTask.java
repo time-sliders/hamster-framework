@@ -44,7 +44,7 @@ public class MultiThreadTask {
     //子线程任务列表
     protected List<SubTask> subThreadTaskList;
     //可作为子线程共享内存,也可存储子线程参数
-    private ConcurrentMap<String, Object> context;
+    protected ConcurrentMap<String, Object> context;
     //主线程最大等待时间(毫秒)
     private long maxWaitMillis;
 
@@ -118,14 +118,14 @@ public class MultiThreadTask {
      */
     private void waitSubTaskFinish() {
         synchronized (this) {
-            /**
+            /*
              * 先加锁,再判断
              * 这个判断是为了防止子线程过快的执行完,主线程还没有进入
              * 到等待状态时,避免主线程等待
              */
             if (!isAllTaskFinished()) {
                 try {
-                    /**
+                    /*
                      * 等待(不要去掉wait的参数,这是对异
                      * 常情况的一个容错,防止主线程死锁)
                      */
