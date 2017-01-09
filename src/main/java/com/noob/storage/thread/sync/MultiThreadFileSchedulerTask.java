@@ -27,9 +27,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author luyun
  * @see FileDataConsumerTask
  */
-public class MultiThreadFileReaderTask extends MultiThreadTask {
+public class MultiThreadFileSchedulerTask extends MultiThreadTask {
 
-    private static final Logger logger = LoggerFactory.getLogger(MultiThreadFileReaderTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(MultiThreadFileSchedulerTask.class);
 
     //共享Reader
     private BufferedReader reader;
@@ -52,11 +52,11 @@ public class MultiThreadFileReaderTask extends MultiThreadTask {
      * @param clazz     数据处理子类
      * @param context   上下文,共享参数
      */
-    public <T extends FileDataConsumerTask> MultiThreadFileReaderTask(File file,
-                                                                      int threadNum,
-                                                                      int cacheSize,
-                                                                      Class<T> clazz,
-                                                                      ConcurrentMap<String, Object> context) {
+    public <T extends FileDataConsumerTask> MultiThreadFileSchedulerTask(File file,
+                                                                         int threadNum,
+                                                                         int cacheSize,
+                                                                         Class<T> clazz,
+                                                                         ConcurrentMap<String, Object> context) {
 
         super(context, Millisecond.ONE_HOUR);
 

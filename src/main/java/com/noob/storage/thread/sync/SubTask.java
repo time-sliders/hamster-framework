@@ -11,11 +11,11 @@ import java.util.concurrent.ConcurrentMap;
  * @author luyun
  * @see MultiThreadTask
  */
-public abstract class SubTask<M extends MultiThreadTask> extends Thread {
+public abstract class SubTask extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(SubTask.class);
 
-    M mainTask;
+    MultiThreadTask mainTask;
 
     @Override
     public void run() {
@@ -33,7 +33,7 @@ public abstract class SubTask<M extends MultiThreadTask> extends Thread {
      */
     protected abstract void doBusiness(ConcurrentMap<String, Object> context);
 
-    void setMainTask(M mainTask) {
+    void setMainTask(MultiThreadTask mainTask) {
         this.mainTask = mainTask;
     }
 }
