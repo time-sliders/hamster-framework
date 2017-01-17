@@ -64,7 +64,8 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
             throw new RuntimeException("invalid file!");
         }
 
-        this.threadNum = threadNum <= 1 || threadNum > 10 ? 3 : threadNum;
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        this.threadNum = threadNum <= 1 || threadNum > availableProcessors ? availableProcessors : threadNum;
         this.cacheSize = cacheSize < 10 || cacheSize > 1000 ? 100 : cacheSize;
         lineDataBuffer = new LinkedBlockingQueue<String>(cacheSize);
         this.clazz = clazz;
