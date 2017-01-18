@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -34,12 +36,12 @@ public class MultiThreadTask {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiThreadTask.class);
 
-    //已完成的子任务总数
-    private int finishedTaskCount = 0;
     //需要完成的子任务总数
-    protected int taskCount = 0;
+    protected int threadNum = 0;
+    //主线程的等待锁
+    private CountDownLatch subTaskLatch;
     //当前多线程任务是否已经启动(已经启动则不允许再添加子任务)
-    private AtomicBoolean isStarted = new AtomicBoolean(false);
+    protected AtomicBoolean isStarted = new AtomicBoolean(false);
     //子线程任务列表
     protected List<SubTask> subThreadTaskList;
     //可作为子线程共享内存,也可存储子线程参数
@@ -55,7 +57,7 @@ public class MultiThreadTask {
     /**
      * 添加一个子线程任务
      */
-    protected void addSubTask(SubTask task) {
+    public void addSubTask(SubTask task) {
 
         if (task == null) {
             throw new NullPointerException("task must not be null!");
@@ -69,10 +71,9 @@ public class MultiThreadTask {
             subThreadTaskList = new ArrayList<SubTask>();
         }
 
-        //noinspection unchecked
         task.setMainTask(this);
         if (subThreadTaskList.add(task)) {
-            taskCount++;
+            threadNum++;
         }
     }
 
@@ -84,13 +85,15 @@ public class MultiThreadTask {
 
         try {
             if (!isStarted.compareAndSet(false, true)) return;
+            subTaskLatch = new CountDownLatch(threadNum);
 
             // 启动子线程
             startAllSubTask();
 
-            // 主线程等待
-            waitSubTaskFinish();
-
+            // 等待所有子线程处理完毕
+            subTaskLatch.await(maxWaitMillis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            logger.warn(e.getMessage(), e);
         } finally {
             // 相关资源销毁
             destroy();
@@ -120,49 +123,11 @@ public class MultiThreadTask {
     }
 
     /**
-     * 在主线程启动完所有子线程任务之后,主线程进入等待(wait)
-     * 直到所有子线程任务完成,才唤醒(notify)主线程。
-     *
-     * @see #afterSubTaskFinish()
-     */
-    private void waitSubTaskFinish() {
-        synchronized (this) {
-            /*
-             * 先加锁,再判断
-             * 这个判断是为了防止子线程过快的执行完,主线程还没有进入
-             * 到等待状态时,避免主线程等待
-             */
-            if (!isAllTaskFinished()) {
-                try {
-                    /*
-                     * 等待(不要去掉wait的参数,这是对异
-                     * 常情况的一个容错,防止主线程死锁)
-                     */
-                    this.wait(maxWaitMillis);
-                } catch (InterruptedException e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
-        }
-    }
-
-    /**
      * 子线程任务完成时调用该方法<br/>
      * 如果所有子线程任务已全部完成,则结束主线程等待
-     *
-     * @see #waitSubTaskFinish()
      */
     void afterSubTaskFinish() {
-        synchronized (this) {
-            ++finishedTaskCount;
-            if (isAllTaskFinished()) {
-                this.notify();
-            }
-        }
-    }
-
-    private boolean isAllTaskFinished() {
-        return finishedTaskCount >= taskCount;
+        subTaskLatch.countDown();
     }
 
 }

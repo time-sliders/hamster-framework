@@ -41,7 +41,7 @@ public class SocketDecorate extends Socket implements InitAble {
 
 
     public SocketDecorate(String host, int port) {
-        /**防止主机为null的情况下连接本地计算机*/
+        //防止主机为null的情况下连接本地计算机
         if (StringUtils.isBlank(host) || port <= 0) {
             throw new ProcessException("Socket创建失败：主机名或端口号不合法！");
         }

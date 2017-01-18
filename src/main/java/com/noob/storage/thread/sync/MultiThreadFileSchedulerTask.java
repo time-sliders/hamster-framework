@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,11 +44,10 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
     //第一行数据是否已经被读取
     private Condition firstLineReadCondition = lock.newCondition();
     private Class clazz;
-    private int threadNum;
 
     /**
      * @param file      需要处理的文件
-     * @param threadNum 需要几个线程处理
+     * @param threadNum 需要几个线程处理,线程数不允许超过最大CPU核数
      * @param cacheSize 缓冲队列大小
      * @param clazz     数据处理子类
      * @param context   上下文,共享参数
@@ -100,7 +100,6 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
              */
             startReadThread();
 
-
             /*
              * 等待文件中第一行数据被读取
              * 这个控制是为了防止出现空文件时,消费线程已经进入take()等待
@@ -117,18 +116,17 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
         }
 
         //启动数据消费线程
-        for (int i = 0; i < subThreadTaskList.size(); i++) {
+        for (SubTask subTask : subThreadTaskList) {
             /*
              * 如果在启动线程的过程中,由于任务较少,
              * 数据被很快的处理完,则后续线程就不需要在被启动了
              */
             if (isAllDataRead && lineDataBuffer.isEmpty()) {
-                // 扣除掉没有执行的任务
-                taskCount -= (subThreadTaskList.size() - i);
-                break;
+                super.afterSubTaskFinish();
+                continue;
             }
 
-            subThreadTaskList.get(i).start();
+            subTask.start();
         }
     }
 
@@ -137,8 +135,29 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
         FileDataConsumerTask readTask = (FileDataConsumerTask) clazz.newInstance();
         readTask.setMainTask(this);
         readTask.modeSwitch();//切换到读模式
-        taskCount++;
         readTask.start();
+    }
+
+    /**
+     * 添加一个子线程任务
+     * 重写父类方法，不再累加线程数
+     */
+    public void addSubTask(SubTask task) {
+
+        if (task == null) {
+            throw new NullPointerException("task must not be null!");
+        }
+
+        if (isStarted.get()) {
+            throw new IllegalStateException("already started");
+        }
+
+        if (subThreadTaskList == null) {
+            subThreadTaskList = new ArrayList<SubTask>();
+        }
+
+        task.setMainTask(this);
+        subThreadTaskList.add(task);
     }
 
     // 从数据缓存队列中获取一行数据

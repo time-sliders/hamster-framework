@@ -23,8 +23,6 @@ public abstract class FileDataConsumerTask extends SubTask {
 
     public void doBusiness(ConcurrentMap<String, Object> context) {
 
-        scheduler = (MultiThreadFileSchedulerTask) mainTask;
-
         while (!scheduler.isAllDataRead || CollectionUtils.isNotEmpty(scheduler.lineDataBuffer)) {
 
             if (Mode.Read == mode) {
@@ -87,6 +85,12 @@ public abstract class FileDataConsumerTask extends SubTask {
         }
 
         return true;
+    }
+
+    @Override
+    void setMainTask(MultiThreadTask mainTask) {
+        super.setMainTask(mainTask);
+        scheduler = (MultiThreadFileSchedulerTask) mainTask;
     }
 
     /**

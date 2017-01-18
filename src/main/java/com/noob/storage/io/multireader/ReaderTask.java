@@ -44,7 +44,7 @@ public abstract class ReaderTask implements Runnable {
      * 后续可以考虑将其优化成从缓冲队列中获取
      */
     private String syncReadLine() throws IOException {
-        /**
+        /*
          * 这里的synchronized 关键字放在syncReadLine()方法上并
          * 不能起到同步的作用。因为是通过多个ReaderTask来执行任务,
          * 对象之间互不影响,故需要在共享内存对象Reader上做同步
