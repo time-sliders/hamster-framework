@@ -3,8 +3,9 @@ package com.noob.storage.io.nio;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import java.io.Closeable;
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -12,6 +13,10 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Iterator;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * NIO 服务
@@ -20,6 +25,7 @@ import java.util.Iterator;
  *
  * @author luyun
  */
+@Component
 public class NIOServer implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(NIOServer.class);
@@ -28,6 +34,23 @@ public class NIOServer implements Runnable {
      * 启动端口
      */
     private int port;
+
+    private ThreadPoolExecutor tpe = null;
+
+    @PostConstruct
+    public void init() {
+
+        tpe = new ThreadPoolExecutor(5, 40, 60, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>(5000), new RejectedExecutionHandler() {
+
+            @Override
+            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+                logger.info("服务器执行任务过多..." + r);
+            }
+        });
+
+        logger.info("NIO Server ThreadPoolExecutor init succ!");
+    }
 
     @Override
     public void run() {
@@ -70,25 +93,19 @@ public class NIOServer implements Runnable {
                         continue;
                     }
 
-                    //dispatch(sk);
+                    dispatch(sk);
                 }
             }
         } catch (IOException e) {
             logger.error(null, e);
         } finally {
-            if (selector != null) {
-                try {
-                    selector.close();
-                } catch (IOException ioe) {
-                    // ignored
-                }
-            }
+            IOUtils.closeQuietly(selector);
         }
     }
 
     private void dispatch(SelectionKey sk) {
         Runnable skAttach = (Runnable) sk.attachment();
-        skAttach.run();
+        tpe.submit(skAttach);
     }
 
 }

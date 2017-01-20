@@ -32,7 +32,7 @@ public class DataLoadTask<T> implements Runnable {
      * @param cacheObject 加载参数
      */
     public T loadDataFromSource(CacheObject cacheObject) {
-        //TODO 加载 ，加载完缓存等逻辑
+
         return null;
     }
 

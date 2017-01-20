@@ -1,5 +1,7 @@
 package com.noob.storage.util;
 
+import java.util.Random;
+
 /**
  * @author luyun
  * @since app5.9
@@ -7,7 +9,8 @@ package com.noob.storage.util;
 public class TestSpliter {
 
     public static void main(String[] args) {
-        String s ="a,b,c,d,e,f,";
-        System.out.println(s.split(","));
+        Random random = new Random();
+        int x = random.nextInt(1000);
+        System.out.println(x);
     }
 }
