@@ -63,7 +63,6 @@ public class NioServer implements Runnable {
                 e.printStackTrace();
             }
         }
-
     }
 
     /**
@@ -81,8 +80,6 @@ public class NioServer implements Runnable {
 
     /**
      * 初始化selector，绑定服务端监听套接字、感兴趣事件及对应的handler
-     *
-     * @throws IOException
      */
     private Selector initSelector() throws IOException {
         // 创建一个selector
@@ -113,7 +110,6 @@ public class NioServer implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
 
         private void accept() throws IOException {
@@ -126,7 +122,6 @@ public class NioServer implements Runnable {
             // 创建Handler,专门处理该连接后续发生的OP_READ和OP_WRITE事件
             new EventHandler(selector, socketChannel);
         }
-
     }
 
 }

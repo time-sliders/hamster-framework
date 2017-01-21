@@ -1,4 +1,4 @@
-package com.noob.storage.io.nio;
+package com.noob.storage.io.nio.server;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author luyun
  */
 @Component
-public class NIOServer implements Runnable {
+public class NIOServer extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(NIOServer.class);
 
@@ -36,6 +36,10 @@ public class NIOServer implements Runnable {
     private int port;
 
     private ThreadPoolExecutor tpe = null;
+
+    public NIOServer(int port) {
+        this.port = port;
+    }
 
     @PostConstruct
     public void init() {
@@ -66,9 +70,9 @@ public class NIOServer implements Runnable {
             SocketAddress address = new InetSocketAddress(port);
             ServerSocketChannel ssc = ServerSocketChannel.open();
             ssc.configureBlocking(false);
-            ssc.bind(address);
+            ssc.socket().bind(address);
             SelectionKey selectionKey = ssc.register(selector, SelectionKey.OP_ACCEPT);
-            selectionKey.attach(new ServerAttachment(selectionKey));
+            selectionKey.attach(new Acceptor(selectionKey, ssc));
 
             while (true) {
 
@@ -76,11 +80,11 @@ public class NIOServer implements Runnable {
                  * 阻塞
                  * 等待selector 上至少有一个selectionKey准备就绪
                  */
-                selector.select();
+                if (selector.select() <= 0) {
+                    continue;
+                }
 
-                /*
-                 * 获取已经准备就绪的selectionKey set
-                 */
+                //获取已经准备就绪的selectionKey set
                 Iterator<SelectionKey> ski = selector.selectedKeys().iterator();
 
                 while (ski.hasNext()) {
@@ -93,7 +97,7 @@ public class NIOServer implements Runnable {
                         continue;
                     }
 
-                    dispatch(sk);
+                    tpe.submit((Runnable) selectionKey.attachment());
                 }
             }
         } catch (IOException e) {
@@ -101,11 +105,6 @@ public class NIOServer implements Runnable {
         } finally {
             IOUtils.closeQuietly(selector);
         }
-    }
-
-    private void dispatch(SelectionKey sk) {
-        Runnable skAttach = (Runnable) sk.attachment();
-        tpe.submit(skAttach);
     }
 
 }
