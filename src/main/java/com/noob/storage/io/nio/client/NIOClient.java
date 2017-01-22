@@ -3,6 +3,7 @@ package com.noob.storage.io.nio.client;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -33,7 +34,9 @@ public class NIOClient extends Thread {
             Selector selector = Selector.open();
             SocketChannel socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
-            SocketAddress socketAddress = new InetSocketAddress(ip, port);
+            SocketAddress socketAddress = new InetSocketAddress(InetAddress.getByName("localhost"), port);
+
+            //这里返回值是false
             socketChannel.connect(socketAddress);
 
             SelectionKey selectionKey = socketChannel.register(selector, SelectionKey.OP_CONNECT);

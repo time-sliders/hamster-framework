@@ -24,7 +24,7 @@ public class Acceptor extends NIOEventHandler {
     @Override
     public void run() {
         try {
-            System.out.println("Acceptor start");
+            System.out.println("Acceptor start" + System.currentTimeMillis());
             SocketChannel socketChannel = serverSocketChannel.accept();
 
             //非阻塞模式并且没有可用的连接时返回null

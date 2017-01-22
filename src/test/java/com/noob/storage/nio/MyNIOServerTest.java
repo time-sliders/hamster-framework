@@ -8,14 +8,16 @@ import com.noob.storage.io.nio.server.NIOServer;
  */
 public class MyNIOServerTest {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         // 启动服务器
         NIOServer nioServer = new NIOServer(8080);
         nioServer.init();
         nioServer.start();
 
+        Thread.sleep(1000L);
 
-        new NIOClient("localhost", 8080).start();
+
+        new NIOClient(null, 8080).start();
     }
 
 }

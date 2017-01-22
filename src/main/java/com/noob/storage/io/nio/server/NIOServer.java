@@ -12,6 +12,7 @@ import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -66,7 +67,7 @@ public class NIOServer extends Thread {
              * 并能够知晓通道是否为诸如读写事件做好准备的组件。这样，一个
              * 单独的线程可以管理多个 channel,从而管理多个网络连接。
              */
-            selector = Selector.open();
+            selector = SelectorProvider.provider().openSelector();
             SocketAddress address = new InetSocketAddress(port);
             ServerSocketChannel ssc = ServerSocketChannel.open();
             ssc.configureBlocking(false);
