@@ -66,7 +66,7 @@ public class RedisComponent implements InitializingBean {
 
     private Serializer serializer;
 
-    /****************** 常用方法 *******************/
+    /*--***************** 常用方法 *******************/
 
     /**
      * 获取一个锁

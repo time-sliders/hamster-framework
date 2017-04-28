@@ -10,7 +10,6 @@ public class FilePersistentComponentTest {
 
     @Test
     public void testWriteWithTmp() throws Exception {
-        FilePersistentComponent.writeWithTmp("/Users/zhangwei/test/","FilePersistentComponent","hello");
     }
 
 }
