@@ -19,7 +19,9 @@ public abstract class AbstractEnhanceCompletionService<V> {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractEnhanceCompletionService.class);
 
-    //执行任务的线程池
+    /**
+     * 执行任务的完成服务
+     */
     private ExecutorCompletionService<V> ecs;
 
     /**
@@ -31,13 +33,13 @@ public abstract class AbstractEnhanceCompletionService<V> {
 
     /**
      * 消费任务是否允许开始消费
-     *
-     * 消费任务是在最先启动的,该任务会在
      */
     private Condition consumerCondition = lock.newCondition();
 
-    //还在处理的任务总量
-    protected AtomicInteger dealingTaskCount = new AtomicInteger(0);
+    /**
+     * 还在处理的任务总量
+     */
+    private AtomicInteger dealingTaskCount = new AtomicInteger(0);
 
     public AbstractEnhanceCompletionService(Executor executor) {
         this.ecs = new ExecutorCompletionService<V>(executor, new LinkedBlockingDeque<Future<V>>(1000));
@@ -75,6 +77,9 @@ public abstract class AbstractEnhanceCompletionService<V> {
 
             notifyFutureConsumerThread();
 
+            /*
+             * 等待结果消费线程被回收
+             */
             futureConsumerThread.join();
 
         } catch (Exception e) {
@@ -88,7 +93,6 @@ public abstract class AbstractEnhanceCompletionService<V> {
      * 唤醒结果消费线程的等待状态
      */
     private void notifyFutureConsumerThread() {
-
         lock.lock();
         try {
             consumerCondition.signal();
@@ -105,40 +109,53 @@ public abstract class AbstractEnhanceCompletionService<V> {
         @Override
         public void run() {
 
-            lock.lock();
-            try {
-                logger.info("CompletionQueueConsumerTask wait for consumer condition");
-                consumerCondition.await();
-            } catch (InterruptedException e) {
-                logger.warn("CompletionQueueConsumerTask增强服务结果消费线程在消费等待时发生InterruptedException", e);
-            } finally {
-                lock.unlock();
-            }
 
-            logger.info("CompletionQueueConsumerTask start consumer");
             while (true) {
 
                 if (isAllTaskSubmitted && dealingTaskCount.get() <= 0) {
                     break;
                 }
 
+                /*
+                 * 1.第一个任务提交过慢问题:
+                 * 消费任务是在最先启动的,该任务只会在任务开始提交或者任务已经全
+                 * 部提交完毕之后开始正式消费
+                 *
+                 * 2.最后一个任务过快执行问题:
+                 * 假设:最后一个任务提交完之后,结果被很快消费处理完
+                 * isAllTaskSubmitted 字段在 CompletionQueueConsumerTask 进入下
+                 * 一次while循环判断的时候,甚至还没来的及置为 true
+                 * 就会导致CompletionQueueConsumerTask 一直等待在take方法,从而死锁在这
+                 */
+                lock.lock();
                 try {
-                    V v = ecs.take().get();
-
-                    dealingTaskCount.decrementAndGet();
-
-                    dealResult(v);
-
+                    if (!isAllTaskSubmitted && dealingTaskCount.get() <= 0) {
+                        consumerCondition.await();
+                    }
                 } catch (InterruptedException e) {
-                    logger.warn(e.getMessage(), e);
-                } catch (ExecutionException e) {
-                    logger.warn(e.getMessage(), e);
-                    dealingTaskCount.decrementAndGet();
+                    logger.warn("CompletionQueueConsumerTask增强服务结果消费线程在消费等待时发生InterruptedException", e);
+                } finally {
+                    lock.unlock();
                 }
+
+                int count = dealingTaskCount.get();
+
+                for (int i = 0; i < count; i++) {
+
+                    try {
+
+                        V v = ecs.take().get();
+
+                        dealingTaskCount.decrementAndGet();
+
+                        dealResult(v);
+
+                    } catch (Throwable e) {
+                        logger.warn(e.getMessage(), e);
+                    }
+                }
+
             }
-
-            logger.info("CompletionQueueConsumerTask end consumer");
         }
-
     }
 }

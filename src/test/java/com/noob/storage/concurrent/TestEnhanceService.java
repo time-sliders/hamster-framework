@@ -17,6 +17,8 @@ public class TestEnhanceService {
 
     public static void main(String[] args) {
 
+        System.out.println(Runtime.getRuntime().availableProcessors());
+
         ThreadPoolExecutor tpe = new ThreadPoolExecutor(3, 3, 10, TimeUnit.SECONDS,
                 new LinkedBlockingDeque<>(10), new RejectedExecutionHandler() {
             @Override
@@ -37,7 +39,7 @@ public class TestEnhanceService {
             @Override
             protected void pushTasks() {
                 Random random = new Random();
-                for (int i = 0; i < 0; i++) {
+                for (int i = 0; i < 200; i++) {
                     submit(new Callable<Boolean>() {
                         @Override
                         public Boolean call() throws Exception {
