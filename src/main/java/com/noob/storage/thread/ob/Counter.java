@@ -49,4 +49,9 @@ public class Counter {
                 + all + "]";
     }
 
+    public void reset() {
+        success = 0;
+        fail = 0;
+        success = 0;
+    }
 }

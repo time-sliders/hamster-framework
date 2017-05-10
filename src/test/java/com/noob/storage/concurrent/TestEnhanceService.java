@@ -2,10 +2,7 @@ package com.noob.storage.concurrent;
 
 import com.noob.storage.thread.ob.Counter;
 import com.noob.storage.thread.sync.AbstractEnhanceCompletionService;
-import com.noob.storage.utils.DateUtil;
 
-import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.*;
 
 /**
@@ -15,7 +12,7 @@ import java.util.concurrent.*;
  */
 public class TestEnhanceService {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         System.out.println(Runtime.getRuntime().availableProcessors());
 
@@ -38,13 +35,10 @@ public class TestEnhanceService {
 
             @Override
             protected void pushTasks() {
-                Random random = new Random();
                 for (int i = 0; i < 200; i++) {
                     submit(new Callable<Boolean>() {
                         @Override
                         public Boolean call() throws Exception {
-                            Thread.sleep(random.nextInt(300));
-                            System.out.println(DateUtil.format(new Date(), DateUtil.DEFAULT_FORMAT) + "_" + Thread.currentThread().getName());
                             return true;
                         }
                     });
@@ -59,9 +53,13 @@ public class TestEnhanceService {
             }
         };
 
-        ecs.start();
+        for (int i = 0; i < 100; i++) {
+            ecs.start();
+            System.out.println(counter.toString());
+            counter.reset();
+            Thread.sleep(100);
+        }
 
-        System.out.println(counter.toString());
 
     }
 
