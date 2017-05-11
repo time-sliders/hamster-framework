@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,7 +28,7 @@ public abstract class AbstractEnhanceCompletionService<V> {
     /**
      * 是否所有任务已经全部提交到线程池
      */
-    private volatile boolean isAllTaskSubmitted = false;
+    private AtomicBoolean isAllTaskSubmitted = new AtomicBoolean(false);
 
     private ReentrantLock lock = new ReentrantLock();
 
@@ -46,7 +47,7 @@ public abstract class AbstractEnhanceCompletionService<V> {
     }
 
     /**
-     * 提交所有任务到线程池
+     * 提交单个任务到完成服务
      */
     protected void submit(Callable<V> task) {
         ecs.submit(task);
@@ -54,11 +55,31 @@ public abstract class AbstractEnhanceCompletionService<V> {
         notifyFutureConsumerThread();
     }
 
-    protected abstract void pushTasks();
+    /**
+     * 提交任务到完成服务<br/>
+     * <p>
+     * 提交单个任务时需要使用 {@link AbstractEnhanceCompletionService#submit(Callable)} 方法<br/>
+     * 该方法允许分页查询,并不影响消费线程消费结果
+     */
+    protected abstract void submitTask();
 
-    protected abstract void dealResult(V v);
+    /**
+     * 消费任务执行结果
+     *
+     * @param v 执行结果
+     */
+    protected abstract void consumerFuture(V v);
 
-    public void start() {
+    /**
+     * 重置
+     */
+    private void reset() {
+        isAllTaskSubmitted.compareAndSet(true, false);
+    }
+
+    public synchronized void start() {
+
+        reset();
 
         /*
          * 启动消费任务
@@ -71,9 +92,9 @@ public abstract class AbstractEnhanceCompletionService<V> {
              * start 方法在调用程序主线程中运行
              * 即提交任务线程
              */
-            pushTasks();
+            submitTask();
 
-            isAllTaskSubmitted = true;
+            isAllTaskSubmitted.compareAndSet(false, true);
 
             notifyFutureConsumerThread();
 
@@ -112,7 +133,7 @@ public abstract class AbstractEnhanceCompletionService<V> {
 
             while (true) {
 
-                if (isAllTaskSubmitted && dealingTaskCount.get() <= 0) {
+                if (isAllTaskSubmitted.get() && dealingTaskCount.get() <= 0) {
                     break;
                 }
 
@@ -129,7 +150,7 @@ public abstract class AbstractEnhanceCompletionService<V> {
                  */
                 lock.lock();
                 try {
-                    if (!isAllTaskSubmitted && dealingTaskCount.get() <= 0) {
+                    if (!isAllTaskSubmitted.get() && dealingTaskCount.get() <= 0) {
                         consumerCondition.await();
                     }
                 } catch (InterruptedException e) {
@@ -148,7 +169,7 @@ public abstract class AbstractEnhanceCompletionService<V> {
 
                         dealingTaskCount.decrementAndGet();
 
-                        dealResult(v);
+                        consumerFuture(v);
 
                     } catch (Throwable e) {
                         logger.warn(e.getMessage(), e);

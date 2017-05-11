@@ -34,7 +34,7 @@ public class TestEnhanceService {
         AbstractEnhanceCompletionService<Boolean> ecs = new AbstractEnhanceCompletionService<Boolean>(tpe) {
 
             @Override
-            protected void pushTasks() {
+            protected void submitTask() {
                 for (int i = 0; i < 200; i++) {
                     submit(new Callable<Boolean>() {
                         @Override
@@ -46,7 +46,7 @@ public class TestEnhanceService {
             }
 
             @Override
-            protected void dealResult(Boolean isSuccess) {
+            protected void consumerFuture(Boolean isSuccess) {
                 if (isSuccess) {
                     counter.successPlus();
                 }
