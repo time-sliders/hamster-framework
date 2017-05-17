@@ -7,10 +7,7 @@ package com.noob.storage.exception;
  */
 public class ProcessException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 5370781442080392919L;
+    private static final long serialVersionUID = 1L;
 
     public ProcessException(String message) {
         super(message);

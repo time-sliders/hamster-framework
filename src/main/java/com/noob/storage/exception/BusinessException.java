@@ -8,7 +8,7 @@ package com.noob.storage.exception;
  */
 public class BusinessException extends Exception {
 
-    private static final long serialVersionUID = 2344441549518433402L;
+    private static final long serialVersionUID = 1L;
 
     private String errorCode;
 

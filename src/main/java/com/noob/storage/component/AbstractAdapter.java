@@ -1,4 +1,4 @@
-package com.noob.storage.pattern.adapter;
+package com.noob.storage.component;
 
 import org.apache.commons.collections.MapUtils;
 

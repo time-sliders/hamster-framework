@@ -1,7 +1,6 @@
 package com.noob.storage.zookeeper.watcher;
 
-import com.noob.storage.pattern.adapter.AbstractAdapter;
-import com.noob.storage.pattern.adapter.AbstractBeanAdapter;
+import com.noob.storage.component.AbstractBeanAdapter;
 import com.noob.storage.zookeeper.watcher.handler.ZookeeperEventHandler;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
