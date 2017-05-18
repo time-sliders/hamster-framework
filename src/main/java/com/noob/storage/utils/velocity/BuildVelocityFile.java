@@ -19,22 +19,38 @@ import java.util.zip.ZipOutputStream;
  */
 public class BuildVelocityFile {
 
-    public static void main(String[] args) {
-        try {
-            String table = "fund_portfolio";
-            String beanName = StringUtils.getJavaName(table);
-            System.out.println(beanName);
-            String ip = "192.168.1.151";
-            String port = "3306";
-            String schema = "fund";
-            String userName = "tbj";
-            String password = "tbj900900";
+    private static final String ip = "";
+    private static final String port = "3306";
+    private static final String schema = "fund";
+    private static final String userName = "";
+    private static final String password = "";
 
+    public static void main(String[] args) {
+
+        String[] tables = new String[]{
+                "fund_portfolio_net_value"
+        };
+
+        if (tables.length <= 0) {
+            return;
+        }
+
+        for (String tableName : tables) {
+            buildZipFile(tableName);
+        }
+
+    }
+
+    private static void buildZipFile(String table) {
+        try {
+            String beanName = StringUtils.getJavaName(table);
             Connection connection = DriverManager.getConnection("jdbc:mysql://" + ip + ":" + port + "/" + schema + "?useUnicode=true&characterEncoding=utf-8", userName, password);
             TableConfig tableConfig = getTable(connection, table);
             connection.close();
+
             tableConfig.setBeanName(beanName);
             tableConfig.setInjectName(StringUtils.getFistLowName(beanName));
+
             File file = new File("/Users/zhangwei/Downloads/" + beanName + ".zip");
             if (file.exists() && !file.delete()) {
                 throw new RuntimeException("delete fail");
@@ -45,12 +61,16 @@ public class BuildVelocityFile {
             FileOutputStream fis = new FileOutputStream(file);
             CheckedOutputStream cos = new CheckedOutputStream(fis, new CRC32());
             ZipOutputStream out = new ZipOutputStream(cos);
+
             printMapper(tableConfig, out);
+
             out.close();
+            System.out.println(beanName + ">>>>>>SUCCESS");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     private static void printMapper(TableConfig table, ZipOutputStream out) throws IOException {
 

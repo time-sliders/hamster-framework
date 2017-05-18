@@ -14,9 +14,7 @@ public class TemplateBuilder {
     public final static String DAOImpl = "DAOImpl.vm";
     public final static String Service = "Service.vm";
     public final static String ServiceImpl = "ServiceImpl.vm";
-    public final static String Query = "Query.vm";
     public final static String DOConverter = "DOConverter.vm";
-    public final static String modelDO = "modelDO.vm";
 
     public static String build(TableConfig table, String templateName) {
         VelocityContext velocityContext = new VelocityContext();
