@@ -9,7 +9,14 @@ import java.io.OutputStreamWriter;
 public class TemplateBuilder {
 
     public final static String MAPPER = "template.vm";
-    public final static String MODEL = "model.vm";
+    public final static String model = "model.vm";
+    public final static String DAO = "DAO.vm";
+    public final static String DAOImpl = "DAOImpl.vm";
+    public final static String Service = "Service.vm";
+    public final static String ServiceImpl = "ServiceImpl.vm";
+    public final static String Query = "Query.vm";
+    public final static String DOConverter = "DOConverter.vm";
+    public final static String modelDO = "modelDO.vm";
 
     public static String build(TableConfig table, String templateName) {
         VelocityContext velocityContext = new VelocityContext();
@@ -24,7 +31,6 @@ public class TemplateBuilder {
         }
         byte[] source;
         source = temp.toByteArray();
-        String mapper = new String(source);
-        return mapper;
+        return new String(source);
     }
 }

@@ -5,8 +5,7 @@
 <mapper namespace="${table.namespace}">
 
     <resultMap id="BaseResultMap" type="${table.beanName}">
-    #foreach($column in $table.columns)
-        #if($column.isPrimaryKey())
+        #foreach($column in $table.columns)#if($column.isPrimaryKey())
         <id column="${column.columnName}"  property="${column.fieldName}"/>
         #else
         <result column="${column.columnName}"  property="${column.fieldName}"/>
@@ -61,21 +60,19 @@
             ${table.tableName}
         <set>
         #foreach($column in $table.columns)
-            #if(!$column.isPrimaryKey())
-                #if($column.javaType == 'java.lang.String')
-                    #set($updateTest=${column.fieldName}+" != null and "+${column.fieldName}+" != '' ")
-                #else
-                    #set($updateTest=${column.fieldName}+" != null")
-                #end
+        #if(!$column.isPrimaryKey())
+            #if($column.javaType == 'java.lang.String')
+                #set($updateTest=${column.fieldName}+" != null and "+${column.fieldName}+" != '' ")
+            #else
+                #set($updateTest=${column.fieldName}+" != null")
+            #end
             <if test="$updateTest">
                 #set($value="#{"+$column.fieldName+"}")
-                ${column.columnName}=${value}#if( $foreach.hasNext ),
+                ${column.columnName}=${value}#if( $foreach.hasNext ),#end
 
-            #end
             </if>
             #end
         #end
-            modify_time=#{modifyTime}
         </set>
         where
             id = #{id}

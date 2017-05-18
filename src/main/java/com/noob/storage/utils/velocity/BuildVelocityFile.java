@@ -22,7 +22,8 @@ public class BuildVelocityFile {
     public static void main(String[] args) {
         try {
             String table = "fund_portfolio";
-            String beanName = "FundPortfolio";
+            String beanName = StringUtils.getJavaName(table);
+            System.out.println(beanName);
             String ip = "192.168.1.151";
             String port = "3306";
             String schema = "fund";
@@ -34,14 +35,14 @@ public class BuildVelocityFile {
             connection.close();
             tableConfig.setBeanName(beanName);
             tableConfig.setInjectName(StringUtils.getFistLowName(beanName));
-            File file = new File("/Users/zhangwei/Downloads/test.zip");
+            File file = new File("/Users/zhangwei/Downloads/" + beanName + ".zip");
             if (file.exists() && !file.delete()) {
                 throw new RuntimeException("delete fail");
             }
             if (!file.createNewFile()) {
                 throw new RuntimeException("create fail");
             }
-            FileOutputStream fis = new FileOutputStream(new File("/Users/zhangwei/Downloads/test.zip"));
+            FileOutputStream fis = new FileOutputStream(file);
             CheckedOutputStream cos = new CheckedOutputStream(fis, new CRC32());
             ZipOutputStream out = new ZipOutputStream(cos);
             printMapper(tableConfig, out);
@@ -56,8 +57,23 @@ public class BuildVelocityFile {
         String buffer = TemplateBuilder.build(table, TemplateBuilder.MAPPER);
         printFile(buffer, table.getNamespace(), table.getTableName() + ".xml", out);
 
-        buffer = TemplateBuilder.build(table, TemplateBuilder.MODEL);
+        buffer = TemplateBuilder.build(table, TemplateBuilder.model);
         printFile(buffer, table.getNamespace(), table.getBeanName() + ".java", out);
+
+        buffer = TemplateBuilder.build(table, TemplateBuilder.Service);
+        printFile(buffer, table.getNamespace(), table.getBeanName() + "Service.java", out);
+
+        buffer = TemplateBuilder.build(table, TemplateBuilder.ServiceImpl);
+        printFile(buffer, table.getNamespace(), table.getBeanName() + "ServiceImpl.java", out);
+
+        buffer = TemplateBuilder.build(table, TemplateBuilder.DAO);
+        printFile(buffer, table.getNamespace(), table.getBeanName() + "DAO.java", out);
+
+        buffer = TemplateBuilder.build(table, TemplateBuilder.DAOImpl);
+        printFile(buffer, table.getNamespace(), table.getBeanName() + "DAOImpl.java", out);
+
+        buffer = TemplateBuilder.build(table, TemplateBuilder.DOConverter);
+        printFile(buffer, table.getNamespace(), table.getBeanName() + "DOConverter.java", out);
 
         out.flush();
     }

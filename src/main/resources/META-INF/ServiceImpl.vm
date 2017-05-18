@@ -1,0 +1,48 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+public class ${table.beanName}ServiceImpl implements ${table.beanName}Service {
+
+    @Autowired
+    private ${table.beanName}DAO ${table.injectName}DAO;
+
+    @Autowired
+    private ${table.beanName}DOConverter converter;
+
+    @Override
+    public List<${table.beanName}> query(${table.beanName}Query query) {
+        return converter.asModelList(${table.injectName}DAO.query(query));
+    }
+
+    @Override
+    public Integer count(${table.beanName}Query query) {
+        return ${table.injectName}DAO.count(query);
+    }
+
+    @Override
+    public ${table.beanName} findById(Long id) {
+        return converter.toModel(${table.injectName}DAO.findById(id));
+    }
+
+    @Override
+    public int updateById(${table.beanName} updateParam) {
+        return ${table.injectName}DAO.updateById(converter.toDto(updateParam));
+    }
+
+    @Override
+    public int insert(${table.beanName} ${table.injectName}) {
+
+        ${table.beanName}DO ${table.injectName}DO = converter.toDto(${table.injectName});
+
+        int num = ${table.injectName}DAO.insert(${table.injectName}DO);
+
+        if (num > 0) {
+            ${table.injectName}.setId(${table.injectName}DO.getId());
+        }
+
+        return num;
+    }
+
+}
