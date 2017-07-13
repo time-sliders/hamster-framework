@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author luyun
  * @see FileDataConsumerTask
  */
-public class MultiThreadFileSchedulerTask extends MultiThreadTask {
+public abstract class MultiThreadFileSchedulerTask extends MultiThreadTask {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiThreadFileSchedulerTask.class);
 
@@ -49,14 +49,12 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
      * @param file      需要处理的文件
      * @param threadNum 需要几个线程处理,线程数不允许超过最大CPU核数
      * @param cacheSize 缓冲队列大小
-     * @param clazz     数据处理子类
      * @param context   上下文,共享参数
      */
-    public <T extends FileDataConsumerTask> MultiThreadFileSchedulerTask(File file,
-                                                                         int threadNum,
-                                                                         int cacheSize,
-                                                                         Class<T> clazz,
-                                                                         ConcurrentMap<String, Object> context) {
+    public MultiThreadFileSchedulerTask(File file,
+                                        int threadNum,
+                                        int cacheSize,
+                                        ConcurrentMap<String, Object> context) {
 
         super(context, Millisecond.ONE_HOUR);
 
@@ -77,13 +75,18 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
              */
             int consumerThreadNum = this.threadNum - 1;//消费线程数
             for (int i = 0; i < consumerThreadNum; i++) {
-                T readTask = clazz.newInstance();
+                FileDataConsumerTask readTask = createConsumerTask(context);
                 addSubTask(readTask);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * 创建消费任务
+     */
+    protected abstract FileDataConsumerTask createConsumerTask(ConcurrentMap<String, Object> context);
 
     /**
      * 开始多线程任务
@@ -132,7 +135,7 @@ public class MultiThreadFileSchedulerTask extends MultiThreadTask {
 
     // 初始化并启动一个数据读取线程
     private void startReadThread() throws IllegalAccessException, InstantiationException {
-        FileDataConsumerTask readTask = (FileDataConsumerTask) clazz.newInstance();
+        FileDataConsumerTask readTask = createConsumerTask(context);
         readTask.setMainTask(this);
         readTask.modeSwitch();//切换到读模式
         readTask.start();
