@@ -42,7 +42,7 @@ public class DateUtil {
         return new SimpleDateFormat(format).format(date);
     }
 
-    public static String getDateString(Date date, DateFormat dateFormat) {
+    public static String format(Date date, DateFormat dateFormat) {
 
         if (date == null || dateFormat == null) {
             return null;
@@ -118,6 +118,20 @@ public class DateUtil {
         System.out.println(fromToday(date3));
         System.out.println(fromToday(date4));
         System.out.println(fromToday(date5));
+    }
+
+    public static Date parseDate(String sDate, String format) {
+        DateFormat dateFormat = new SimpleDateFormat(format);
+        Date d = null;
+        dateFormat.setLenient(false);
+        if ((sDate != null) && (sDate.length() == format.length())) {
+            try {
+                d = dateFormat.parse(sDate);
+            } catch (ParseException ex) {
+                return null;
+            }
+        }
+        return d;
     }
 
     /**
