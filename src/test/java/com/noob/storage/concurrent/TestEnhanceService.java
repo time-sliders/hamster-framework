@@ -31,34 +31,34 @@ public class TestEnhanceService {
 
         Counter counter = new Counter();
 
-        AbstractEnhanceCompletionService<Boolean> ecs = new AbstractEnhanceCompletionService<Boolean>(tpe) {
-
-            @Override
-            protected void submitTask() {
-                for (int i = 0; i < 200; i++) {
-                    submit(new Callable<Boolean>() {
-                        @Override
-                        public Boolean call() throws Exception {
-                            return true;
-                        }
-                    });
-                }
-            }
-
-            @Override
-            protected void consumerFuture(Boolean isSuccess) {
-                if (isSuccess) {
-                    counter.successPlus();
-                }
-            }
-        };
-
-        for (int i = 0; i < 100; i++) {
-            ecs.start();
-            System.out.println(counter.toString());
-            counter.reset();
-            Thread.sleep(100);
-        }
+//        AbstractEnhanceCompletionService<Boolean> ecs = new AbstractEnhanceCompletionService<Boolean>(tpe) {
+//
+//            @Override
+//            protected void submitTask() {
+//                for (int i = 0; i < 200; i++) {
+//                    submit(new Callable<Boolean>() {
+//                        @Override
+//                        public Boolean call() throws Exception {
+//                            return true;
+//                        }
+//                    });
+//                }
+//            }
+//
+//            @Override
+//            protected void consumerFuture(Boolean isSuccess) {
+//                if (isSuccess) {
+//                    counter.successPlus();
+//                }
+//            }
+//        };
+//
+//        for (int i = 0; i < 100; i++) {
+//            ecs.start();
+//            System.out.println(counter.toString());
+//            counter.reset();
+//            Thread.sleep(100);
+//        }
 
 
     }

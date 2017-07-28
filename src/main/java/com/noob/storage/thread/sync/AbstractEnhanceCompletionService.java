@@ -12,11 +12,13 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * {@link ExecutorCompletionService} 的一个抽象增强服务
  *
+ * @param <V> 单条数据处理结果类型
+ * @param <S> 所有V的汇总结果
  * @author luyun
  * @version APP 6.6 (Fund aip)
  * @since 2017.04.28
  */
-public abstract class AbstractEnhanceCompletionService<V> {
+public abstract class AbstractEnhanceCompletionService<V, S> {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractEnhanceCompletionService.class);
 
@@ -42,8 +44,14 @@ public abstract class AbstractEnhanceCompletionService<V> {
      */
     private AtomicInteger dealingTaskCount = new AtomicInteger(0);
 
-    public AbstractEnhanceCompletionService(Executor executor) {
+    /**
+     * 结果处理器
+     */
+    private AbstractResultHandler<V, S> resultHandler;
+
+    public AbstractEnhanceCompletionService(Executor executor, AbstractResultHandler<V, S> resultHandler) {
         this.ecs = new ExecutorCompletionService<V>(executor, new LinkedBlockingDeque<Future<V>>(1000));
+        this.resultHandler = resultHandler;
     }
 
     /**
@@ -64,27 +72,20 @@ public abstract class AbstractEnhanceCompletionService<V> {
     protected abstract void submitTask();
 
     /**
-     * 消费任务执行结果
-     *
-     * @param v 执行结果
-     */
-    protected abstract void consumerFuture(V v);
-
-    /**
      * 重置
      */
     private void reset() {
         isAllTaskSubmitted.compareAndSet(true, false);
     }
 
-    public synchronized void start() {
+    public synchronized S start() {
 
         reset();
 
         /*
          * 启动消费任务
          */
-        Thread futureConsumerThread = new CompletionQueueConsumerTask();
+        Thread futureConsumerThread = new CompletionQueueConsumerTask(resultHandler);
         futureConsumerThread.start();
 
         try {
@@ -108,6 +109,8 @@ public abstract class AbstractEnhanceCompletionService<V> {
         } finally {
             notifyFutureConsumerThread();
         }
+
+        return resultHandler.getResult();
     }
 
     /**
@@ -126,6 +129,12 @@ public abstract class AbstractEnhanceCompletionService<V> {
      * 处理结果队列消费任务
      */
     class CompletionQueueConsumerTask extends Thread {
+
+        private AbstractResultHandler<V, S> resultHandler;
+
+        public CompletionQueueConsumerTask(AbstractResultHandler<V, S> resultHandler) {
+            this.resultHandler = resultHandler;
+        }
 
         @Override
         public void run() {
@@ -169,7 +178,7 @@ public abstract class AbstractEnhanceCompletionService<V> {
 
                         dealingTaskCount.decrementAndGet();
 
-                        consumerFuture(v);
+                        resultHandler.consume(v);
 
                     } catch (Throwable e) {
                         logger.warn(e.getMessage(), e);
