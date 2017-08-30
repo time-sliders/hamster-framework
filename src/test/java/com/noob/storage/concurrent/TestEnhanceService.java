@@ -2,6 +2,7 @@ package com.noob.storage.concurrent;
 
 import com.noob.storage.thread.ob.Counter;
 import com.noob.storage.thread.sync.AbstractEnhanceCompletionService;
+import com.noob.storage.thread.sync.AbstractResultHandler;
 
 import java.util.concurrent.*;
 
@@ -29,36 +30,42 @@ public class TestEnhanceService {
         });
         tpe.allowCoreThreadTimeOut(true);
 
-        Counter counter = new Counter();
+        AbstractResultHandler<Boolean, Counter> resultHandler = new AbstractResultHandler<Boolean, Counter>() {
+            private Counter counter = new Counter();
 
-//        AbstractEnhanceCompletionService<Boolean> ecs = new AbstractEnhanceCompletionService<Boolean>(tpe) {
-//
-//            @Override
-//            protected void submitTask() {
-//                for (int i = 0; i < 200; i++) {
-//                    submit(new Callable<Boolean>() {
-//                        @Override
-//                        public Boolean call() throws Exception {
-//                            return true;
-//                        }
-//                    });
-//                }
-//            }
-//
-//            @Override
-//            protected void consumerFuture(Boolean isSuccess) {
-//                if (isSuccess) {
-//                    counter.successPlus();
-//                }
-//            }
-//        };
-//
-//        for (int i = 0; i < 100; i++) {
-//            ecs.start();
-//            System.out.println(counter.toString());
-//            counter.reset();
-//            Thread.sleep(100);
-//        }
+            @Override
+            public synchronized void consume(Boolean isSuccess) {
+                counter.allPlus();
+                if (isSuccess) {
+                    counter.successPlus();
+                }
+            }
+
+            @Override
+            public Counter getResult() {
+                return counter;
+            }
+        };
+
+        AbstractEnhanceCompletionService<Boolean, Counter> ecs = new AbstractEnhanceCompletionService<Boolean, Counter>(tpe, resultHandler) {
+            @Override
+            protected void submitTask() {
+                for (int i = 0; i < 200; i++) {
+                    submit(new Callable<Boolean>() {
+                        @Override
+                        public Boolean call() throws Exception {
+                            return true;
+                        }
+                    });
+                }
+            }
+        };
+
+        for (int i = 0; i < 100; i++) {
+            ecs.start();
+            System.out.println(resultHandler.getResult());
+            Thread.sleep(100);
+        }
 
 
     }

@@ -1,7 +1,6 @@
 package com.noob.storage.http.base;
 
 import com.noob.storage.exception.BusinessException;
-import com.noob.storage.exception.ErrorCode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
@@ -58,7 +57,7 @@ public class HttpClient {
             conn.connect();
         } catch (IOException e) {
             logger.error("无法与HTTP服务器[" + conn.getURL().toString() + "]建立连接", e);
-            throw new BusinessException(ErrorCode.CONNECT_FAIL, "无法与HTTP服务器[" + conn.getURL().toString() + "]建立连接");
+            throw new BusinessException("无法与HTTP服务器[" + conn.getURL().toString() + "]建立连接");
         }
     }
 
