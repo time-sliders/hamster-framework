@@ -1,6 +1,5 @@
 package com.noob.storage.io.mio;
 
-import com.noob.storage.exception.ProcessException;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.io.IOException;
@@ -65,7 +64,7 @@ public class MIOEngine {
 
     public void addOutputStream(OutputStream os) {
         if (isStarted.get()) {
-            throw new ProcessException(
+            throw new RuntimeException(
                     "engine is already started! refuse OutputStream add to engine!");
         }
         OutputThread ot = new OutputThread();
@@ -79,7 +78,7 @@ public class MIOEngine {
      */
     public void start() {
         if (isStarted.compareAndSet(false, true)) {
-            throw new ProcessException(
+            throw new RuntimeException(
                     "engine is already started!");
         }
         int count;
@@ -160,7 +159,7 @@ public class MIOEngine {
 
     public void setInputStream(InputStream is) {
         if (isStarted.get()) {
-            throw new ProcessException(
+            throw new RuntimeException(
                     "engine is already started! refuse InputStream add to engine!");
         }
         this.inputStream = is;

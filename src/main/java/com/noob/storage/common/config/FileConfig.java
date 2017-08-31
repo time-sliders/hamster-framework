@@ -1,6 +1,5 @@
 package com.noob.storage.common.config;
 
-import com.noob.storage.exception.ProcessException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -90,7 +89,7 @@ public class FileConfig {
             properties.load(fis);
             logger.info("成功加载配置文件[{}][{}].", new Object[]{name, location});
         } catch (Exception e) {
-            throw new ProcessException(e);
+            throw new RuntimeException(e);
         } finally {
             IOUtils.closeQuietly(fis);
         }
@@ -105,7 +104,7 @@ public class FileConfig {
             fos = new FileOutputStream(new File(location));
             properties.store(fos, name);
         } catch (Exception e) {
-            throw new ProcessException(e);
+            throw new RuntimeException(e);
         } finally {
             IOUtils.closeQuietly(fos);
         }

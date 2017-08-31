@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  *
  * @author luyun
  */
-@Component
+//@Component
 public class DefaultZookeeperWatcher
         extends AbstractBeanAdapter<Watcher.Event.KeeperState, ZookeeperEventHandler>
         implements Watcher {

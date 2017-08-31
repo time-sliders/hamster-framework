@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 守护任务管理器
  */
-@Component
+//@Component
 public class DaemonTaskLoader {
 
     private final Logger log = Logger.getLogger(DaemonTaskLoader.class);
@@ -53,5 +53,4 @@ public class DaemonTaskLoader {
             log.info("守护任务[" + task.getTaskType() + "][" + task.getTaskName() + "]已从任务队列移除.");
         }
     }
-
 }

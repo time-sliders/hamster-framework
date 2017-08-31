@@ -1,6 +1,5 @@
 package com.noob.storage.socket.client;
 
-import com.noob.storage.exception.ProcessException;
 import com.noob.storage.resource.base.InitAble;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,7 +42,7 @@ public class SocketDecorate extends Socket implements InitAble {
     public SocketDecorate(String host, int port) {
         //防止主机为null的情况下连接本地计算机
         if (StringUtils.isBlank(host) || port <= 0) {
-            throw new ProcessException("Socket创建失败：主机名或端口号不合法！");
+            throw new RuntimeException("Socket创建失败：主机名或端口号不合法！");
         }
         this.host = host;
         this.port = port;
