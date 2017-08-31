@@ -1,5 +1,6 @@
 package com.noob.storage.component;
 
+import com.noob.storage.common.Millisecond;
 import com.noob.storage.rpc.serializer.JsonSerializer;
 import com.noob.storage.rpc.serializer.Serializer;
 import org.apache.commons.collections.MapUtils;
@@ -18,49 +19,48 @@ import java.util.Map.Entry;
 
 /**
  * Redis 组件<br>
+ * ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+ * ｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜ 配置文件｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜｜
+ * ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+ * redis.ip=192.168.XXX.XXX
+ * redis.port=6379
+ * redis.timeout=500
+ * redis.pool.maxTotal=1024
+ * redis.pool.maxIdle=200
+ * redis.pool.maxWaitMillis=1000
+ * redis.pool.testOnBorrow=true
+ * redis.pool.testOnReturn=true
+ * ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+ * ｜｜｜｜｜｜｜｜｜｜｜｜｜Spring 配置文件中添加redis配置｜｜｜｜｜｜｜｜｜｜｜｜｜
+ * ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+ * <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+ * <property name="maxTotal" value="${redis.pool.maxTotal}" />
+ * <property name="maxIdle" value="${redis.pool.maxIdle}" />
+ * <property name="maxWaitMillis" value="${redis.pool.maxWaitMillis}" />
+ * <property name="testOnBorrow" value="${redis.pool.testOnBorrow}" />
+ * <property name="testOnReturn" value="${redis.pool.testOnReturn}" />
+ * </bean>
+ * <bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool">
+ * <constructor-arg index="0" ref="jedisPoolConfig" />
+ * <constructor-arg index="1">
+ * <list>
+ * <bean class="redis.clients.jedis.JedisShardInfo">
+ * <constructor-arg index="0" value="${redis.ip}" />
+ * <constructor-arg index="1" value="${redis.port}" type="int" />
+ * <constructor-arg index="2" value="${redis.timeout}" />
+ * </bean>
+ * </list>
+ * </constructor-arg>
+ * </bean>
+ * ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
  */
 @Component
 public class RedisComponent implements InitializingBean {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final Long LOCK_EXPIRED_TIME = 5 * 1000L;// 分布式锁的失效时间：5秒
+    private static final Long LOCK_EXPIRED_TIME = Millisecond.FIVE_SECONDS;// 分布式锁的失效时间
 
-    /**
-     * 配置文件
-     * <p>
-     * redis.ip=192.168.XXX.XXX
-     * redis.port=6379
-     * redis.timeout=500
-     * redis.pool.maxTotal=1024
-     * redis.pool.maxIdle=200
-     * redis.pool.maxWaitMillis=1000
-     * redis.pool.testOnBorrow=true
-     * redis.pool.testOnReturn=true
-     * <p>
-     * Spring 配置文件中添加redis配置
-     * <p>
-     * <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
-     * <property name="maxTotal" value="${redis.pool.maxTotal}" />
-     * <property name="maxIdle" value="${redis.pool.maxIdle}" />
-     * <property name="maxWaitMillis" value="${redis.pool.maxWaitMillis}" />
-     * <property name="testOnBorrow" value="${redis.pool.testOnBorrow}" />
-     * <property name="testOnReturn" value="${redis.pool.testOnReturn}" />
-     * </bean>
-     * <p>
-     * <bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool">
-     * <constructor-arg index="0" ref="jedisPoolConfig" />
-     * <constructor-arg index="1">
-     * <list>
-     * <bean class="redis.clients.jedis.JedisShardInfo">
-     * <constructor-arg index="0" value="${redis.ip}" />
-     * <constructor-arg index="1" value="${redis.port}" type="int" />
-     * <constructor-arg index="2" value="${redis.timeout}" />
-     * </bean>
-     * </list>
-     * </constructor-arg>
-     * </bean>
-     */
     @Autowired
     private ShardedJedisPool shardedJedisPool;
 

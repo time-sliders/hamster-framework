@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author luyun
  */
-@Component
+//@Component
 public class NIOServer extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(NIOServer.class);
