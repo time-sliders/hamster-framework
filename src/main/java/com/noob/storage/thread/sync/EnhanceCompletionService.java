@@ -16,11 +16,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <S> 所有V的汇总结果
  * @author luyun
  * @version APP 6.6 (Fund aip)
+ * @see AbstractTaskProvider
+ * @see AbstractResultHandler
  * @since 2017.04.28
  */
-public abstract class AbstractEnhanceCompletionService<V, S> {
+public class EnhanceCompletionService<V, S> {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractEnhanceCompletionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(EnhanceCompletionService.class);
 
     /**
      * 执行任务的完成服务
@@ -49,7 +51,7 @@ public abstract class AbstractEnhanceCompletionService<V, S> {
      */
     private AbstractResultHandler<V, S> resultHandler;
 
-    public AbstractEnhanceCompletionService(Executor executor, AbstractResultHandler<V, S> resultHandler) {
+    public EnhanceCompletionService(Executor executor, AbstractResultHandler<V, S> resultHandler) {
         this.ecs = new ExecutorCompletionService<V>(executor, new LinkedBlockingDeque<Future<V>>(1000));
         this.resultHandler = resultHandler;
     }
@@ -57,19 +59,11 @@ public abstract class AbstractEnhanceCompletionService<V, S> {
     /**
      * 提交单个任务到完成服务
      */
-    protected void submit(Callable<V> task) {
+    public void submit(Callable<V> task) {
         ecs.submit(task);
         dealingTaskCount.incrementAndGet();
         notifyFutureConsumerThread();
     }
-
-    /**
-     * 提交任务到完成服务<br/>
-     * <p>
-     * 提交单个任务时需要使用 {@link AbstractEnhanceCompletionService#submit(Callable)} 方法<br/>
-     * 该方法允许分页查询,并不影响消费线程消费结果
-     */
-    protected abstract void submitTask();
 
     /**
      * 重置
@@ -78,7 +72,12 @@ public abstract class AbstractEnhanceCompletionService<V, S> {
         isAllTaskSubmitted.compareAndSet(true, false);
     }
 
-    public synchronized S start() {
+    /**
+     * 开始任务并执行
+     *
+     * @param taskProvider 任务提供者
+     */
+    public synchronized S start(AbstractTaskProvider taskProvider) {
 
         reset();
 
@@ -93,7 +92,7 @@ public abstract class AbstractEnhanceCompletionService<V, S> {
              * start 方法在调用程序主线程中运行
              * 即提交任务线程
              */
-            submitTask();
+            taskProvider.offerTasks();
 
             isAllTaskSubmitted.compareAndSet(false, true);
 
@@ -138,7 +137,6 @@ public abstract class AbstractEnhanceCompletionService<V, S> {
 
         @Override
         public void run() {
-
 
             while (true) {
 

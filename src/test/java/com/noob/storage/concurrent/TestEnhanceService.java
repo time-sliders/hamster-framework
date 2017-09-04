@@ -1,8 +1,9 @@
 package com.noob.storage.concurrent;
 
 import com.noob.storage.thread.ob.Counter;
-import com.noob.storage.thread.sync.AbstractEnhanceCompletionService;
 import com.noob.storage.thread.sync.AbstractResultHandler;
+import com.noob.storage.thread.sync.AbstractTaskProvider;
+import com.noob.storage.thread.sync.EnhanceCompletionService;
 
 import java.util.concurrent.*;
 
@@ -30,9 +31,8 @@ public class TestEnhanceService {
         });
         tpe.allowCoreThreadTimeOut(true);
 
+        Counter counter = new Counter();
         AbstractResultHandler<Boolean, Counter> resultHandler = new AbstractResultHandler<Boolean, Counter>() {
-            private Counter counter = new Counter();
-
             @Override
             public synchronized void consume(Boolean isSuccess) {
                 counter.allPlus();
@@ -47,11 +47,13 @@ public class TestEnhanceService {
             }
         };
 
-        AbstractEnhanceCompletionService<Boolean, Counter> ecs = new AbstractEnhanceCompletionService<Boolean, Counter>(tpe, resultHandler) {
+        EnhanceCompletionService<Boolean, Counter> ecs = new EnhanceCompletionService<Boolean, Counter>(tpe, resultHandler);
+
+        AbstractTaskProvider provider = new AbstractTaskProvider(ecs) {
             @Override
-            protected void submitTask() {
-                for (int i = 0; i < 200; i++) {
-                    submit(new Callable<Boolean>() {
+            public void offerTasks() {
+                for (int i = 0; i < 1000; i++) {
+                    ecs.submit(new Callable<Boolean>() {
                         @Override
                         public Boolean call() throws Exception {
                             return true;
@@ -62,7 +64,8 @@ public class TestEnhanceService {
         };
 
         for (int i = 0; i < 100; i++) {
-            ecs.start();
+            counter.reset();
+            ecs.start(provider);
             System.out.println(resultHandler.getResult());
             Thread.sleep(100);
         }
