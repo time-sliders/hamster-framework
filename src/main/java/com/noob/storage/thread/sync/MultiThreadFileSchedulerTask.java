@@ -1,13 +1,13 @@
 package com.noob.storage.thread.sync;
 
 import com.noob.storage.common.Millisecond;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -43,7 +43,6 @@ public abstract class MultiThreadFileSchedulerTask extends MultiThreadTask {
     private ReentrantLock lock = new ReentrantLock();
     //第一行数据是否已经被读取
     private Condition firstLineReadCondition = lock.newCondition();
-    private Class clazz;
 
     /**
      * @param file      需要处理的文件
@@ -66,7 +65,6 @@ public abstract class MultiThreadFileSchedulerTask extends MultiThreadTask {
         this.threadNum = threadNum <= 1 || threadNum > availableProcessors ? availableProcessors : threadNum;
         this.cacheSize = cacheSize < 10 || cacheSize > 1000 ? 100 : cacheSize;
         lineDataBuffer = new LinkedBlockingQueue<String>(cacheSize);
-        this.clazz = clazz;
 
         try {
             this.reader = new BufferedReader(new FileReader(file));
@@ -214,7 +212,13 @@ public abstract class MultiThreadFileSchedulerTask extends MultiThreadTask {
 
     @Override
     protected void destroy() {
-        IOUtils.closeQuietly(reader);
+        try {
+            if (reader != null) {
+                reader.close();
+            }
+        } catch (IOException ioe) {
+            // ignore
+        }
     }
 
 }
