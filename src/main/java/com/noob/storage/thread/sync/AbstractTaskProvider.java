@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
  * @author luyun
  * @version ZERO 2.0
  * @see EnhanceCompletionService
- * @see AbstractResultHandler
+ * @see AbstractResultConsumer
  * @since 2017.09.04
  */
 public abstract class AbstractTaskProvider {

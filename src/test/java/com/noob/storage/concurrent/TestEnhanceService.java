@@ -1,7 +1,7 @@
 package com.noob.storage.concurrent;
 
 import com.noob.storage.thread.ob.Counter;
-import com.noob.storage.thread.sync.AbstractResultHandler;
+import com.noob.storage.thread.sync.AbstractResultConsumer;
 import com.noob.storage.thread.sync.AbstractTaskProvider;
 import com.noob.storage.thread.sync.EnhanceCompletionService;
 
@@ -15,8 +15,6 @@ import java.util.concurrent.*;
 public class TestEnhanceService {
 
     public static void main(String[] args) throws InterruptedException {
-
-        System.out.println(Runtime.getRuntime().availableProcessors());
 
         ThreadPoolExecutor tpe = new ThreadPoolExecutor(3, 3, 10, TimeUnit.SECONDS,
                 new LinkedBlockingDeque<>(10), new RejectedExecutionHandler() {
@@ -32,7 +30,7 @@ public class TestEnhanceService {
         tpe.allowCoreThreadTimeOut(true);
 
         Counter counter = new Counter();
-        AbstractResultHandler<Boolean, Counter> resultHandler = new AbstractResultHandler<Boolean, Counter>() {
+        AbstractResultConsumer<Boolean, Counter> resultHandler = new AbstractResultConsumer<Boolean, Counter>() {
             @Override
             public synchronized void consume(Boolean isSuccess) {
                 counter.allPlus();
@@ -40,7 +38,6 @@ public class TestEnhanceService {
                     counter.successPlus();
                 }
             }
-
             @Override
             public Counter getResult() {
                 return counter;
@@ -48,7 +45,6 @@ public class TestEnhanceService {
         };
 
         EnhanceCompletionService<Boolean, Counter> ecs = new EnhanceCompletionService<Boolean, Counter>(tpe, resultHandler);
-
         AbstractTaskProvider provider = new AbstractTaskProvider(ecs) {
             @Override
             public void offerTasks() {
@@ -63,12 +59,8 @@ public class TestEnhanceService {
             }
         };
 
-        for (int i = 0; i < 100; i++) {
-            counter.reset();
-            ecs.start(provider);
-            System.out.println(resultHandler.getResult());
-            Thread.sleep(100);
-        }
+        System.out.println(ecs.execute(provider));
+        Thread.sleep(100);
 
 
     }
