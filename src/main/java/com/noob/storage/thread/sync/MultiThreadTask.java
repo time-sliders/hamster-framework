@@ -4,11 +4,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,12 +45,12 @@ public class MultiThreadTask {
     protected List<SubTask> subThreadTaskList;
     //可作为子线程共享内存,也可存储子线程参数
     protected ConcurrentMap<String, Object> context;
-    //主线程最大等待时间(毫秒)
-    private long maxWaitMillis;
 
-    public MultiThreadTask(ConcurrentMap<String, Object> context, long maxWaitMillis) {
+    public MultiThreadTask() {
+    }
+
+    public MultiThreadTask(ConcurrentMap<String, Object> context) {
         this.context = context;
-        this.maxWaitMillis = maxWaitMillis;
     }
 
     /**
@@ -68,7 +67,7 @@ public class MultiThreadTask {
         }
 
         if (subThreadTaskList == null) {
-            subThreadTaskList = new ArrayList<SubTask>();
+            subThreadTaskList = new LinkedList<SubTask>();
         }
 
         task.setMainTask(this);
@@ -91,7 +90,7 @@ public class MultiThreadTask {
             startAllSubTask();
 
             // 等待所有子线程处理完毕
-            subTaskLatch.await(maxWaitMillis, TimeUnit.MILLISECONDS);
+            subTaskLatch.await();
         } catch (InterruptedException e) {
             logger.warn(e.getMessage(), e);
         } finally {

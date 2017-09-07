@@ -21,7 +21,7 @@ public abstract class SubTask extends Thread {
     public void run() {
         try {
             doBusiness(mainTask.context);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error(e.getMessage(), e);
         } finally {
             mainTask.afterSubTaskFinish();

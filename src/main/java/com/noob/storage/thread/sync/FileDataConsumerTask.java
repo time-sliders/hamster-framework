@@ -23,7 +23,7 @@ public abstract class FileDataConsumerTask extends SubTask {
 
     public void doBusiness(ConcurrentMap<String, Object> context) {
 
-        while (!scheduler.isAllDataRead || CollectionUtils.isNotEmpty(scheduler.lineDataBuffer)) {
+        while (!scheduler.isAllDataRead || CollectionUtils.isNotEmpty(scheduler.dataBuffer)) {
 
             if (Mode.Read == mode) {
                 //当为读取模式时,线程负责从文件中读取数据到共享缓存队列中
@@ -43,18 +43,18 @@ public abstract class FileDataConsumerTask extends SubTask {
      */
     private void execute(ConcurrentMap<String, Object> context) {
 
-        String lineData;//文件中的一行数据
+        String data;//文件中的一行数据
 
-        while (scheduler.lineDataBuffer.size() > 0) {
+        while (scheduler.dataBuffer.size() > 0) {
+            // TODO 如果另外一个线程正在读取 会出现什么情况???
+            data = scheduler.take();
 
-            lineData = scheduler.take();
-
-            if (StringUtils.isBlank(lineData)) {
+            if (StringUtils.isBlank(data)) {
                 continue;
             }
 
             try {
-                processLineData(lineData, context);
+                processLineData(data, context);
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
             }
