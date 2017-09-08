@@ -10,7 +10,7 @@ import com.noob.storage.thread.sync.MultiThreadTask;
 public class MultiThreadTaskTest {
 
     public static void main(String[] args) {
-        MultiThreadTask multiThreadTask = new MultiThreadTask(null, Millisecond.TEN_MINUS);
+        MultiThreadTask multiThreadTask = new MultiThreadTask(null);
         multiThreadTask.addSubTask(new MySubTask());
         multiThreadTask.addSubTask(new MySubTask());
         multiThreadTask.addSubTask(new MySubTask());

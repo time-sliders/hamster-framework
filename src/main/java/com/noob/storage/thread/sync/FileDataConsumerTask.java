@@ -5,58 +5,77 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentMap;
-
 /**
  * @author luyun
  */
-public abstract class FileDataConsumerTask extends SubTask {
+public abstract class FileDataConsumerTask<C> extends SubTask<C> {
 
     private static final Logger logger = LoggerFactory.getLogger(FileDataConsumerTask.class);
 
     /**
      * 当前任务的模式:{@link Mode}
      */
-    private volatile int mode = Mode.Execute;
+    volatile int mode = Mode.EXE;
 
-    private MultiThreadFileSchedulerTask scheduler;
+    private MultiThreadFileSchedulerTask<C> scheduler;
 
-    public void doBusiness(ConcurrentMap<String, Object> context) {
+    public void doBusiness(C context) {
+        while (true) {
+            switch (mode) {
+                case Mode.READ:
+                    if (!scheduler.isAllDataRead.get()) {
+                        scheduler.read();
+                    }
+                    break;
 
-        while (!scheduler.isAllDataRead || CollectionUtils.isNotEmpty(scheduler.dataBuffer)) {
-
-            if (Mode.Read == mode) {
-                //当为读取模式时,线程负责从文件中读取数据到共享缓存队列中
-                scheduler.read();
-            } else if (Mode.Execute == mode) {
-                //当为执行模式时,线程负责从共享缓存队列中取数据并进行处理
-                execute(context);
+                case Mode.EXE:
+                    if (CollectionUtils.isNotEmpty(scheduler.dataBuffer)) {
+                        execute(context);
+                    } else if (scheduler.hasReadThread.get()) {
+                        /*
+                         * 为了避免当读取线程因为某些原因导致读取速度过慢的时候
+                         * 消费线程会使CPU满负荷运转的问题调整，这里消费线程如
+                         * 果发现队列没有数据且已经存在读取线程时，进入await等
+                         * 待读取线程读取数据
+                         */
+                        scheduler.lock.lock();
+                        try {
+                            if (!scheduler.isAllDataRead.get()) {// 必须在lock锁内部做判断
+                                scheduler.consumeCondition.await();
+                            }
+                        } catch (InterruptedException e) {
+                            logger.error(e.getMessage(), e);
+                        } finally {
+                            scheduler.lock.unlock();
+                        }
+                    }
+                    break;
             }
 
-            //尝试模式切换
-            modeSwitch();
+            if (scheduler.isAllDataRead.get() && scheduler.dataBuffer.size() <= 0) {
+                break;
+            } else {
+                /*
+                 * 尝试模式轮换
+                 */
+                tryModeSwitch();
+            }
         }
     }
 
     /**
      * 执行模式处理数据
      */
-    private void execute(ConcurrentMap<String, Object> context) {
-
-        String data;//文件中的一行数据
-
-        while (scheduler.dataBuffer.size() > 0) {
-            // TODO 如果另外一个线程正在读取 会出现什么情况???
-            data = scheduler.take();
-
+    private void execute(C context) {
+        String data;
+        while ((data = scheduler.dataBuffer.poll()) != null) {
             if (StringUtils.isBlank(data)) {
                 continue;
             }
-
             try {
-                processLineData(data, context);
-            } catch (Exception e) {
-                logger.warn(e.getMessage(), e);
+                processData(data, context);
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
             }
         }
     }
@@ -67,44 +86,44 @@ public abstract class FileDataConsumerTask extends SubTask {
      * @param lineData 文件中的一行数据
      * @param context  多线程上下文
      */
-    public abstract void processLineData(String lineData, ConcurrentMap<String, Object> context) throws InterruptedException;
+    public abstract void processData(String lineData, C context) throws InterruptedException;
 
     /**
-     * 模式切换，将任务模式切换到另一种状态
+     * 读写轮换
      */
-    boolean modeSwitch() {
-
-        if (this.mode == Mode.Execute
-                && scheduler.isHasReadThread.compareAndSet(false, true)) {
-            // 执行模式-->读取模式
-            this.mode = Mode.Read;
-
-        } else if (this.mode == Mode.Read) {
-            // 读取模式-->执行模式
-            this.mode = Mode.Execute;
+    private void tryModeSwitch() {
+        switch (mode) {
+            case Mode.EXE:
+                if (scheduler.hasReadThread.compareAndSet(false, true)) {
+                    this.mode = Mode.READ;
+                }
+                break;
+            case Mode.READ:
+                if (scheduler.hasReadThread.compareAndSet(true, false)) {
+                    this.mode = Mode.EXE;
+                }
+                break;
         }
-
-        return true;
     }
 
     @Override
-    void setMainTask(MultiThreadTask mainTask) {
+    void setMainTask(MultiThreadTask<C> mainTask) {
         super.setMainTask(mainTask);
-        scheduler = (MultiThreadFileSchedulerTask) mainTask;
+        scheduler = (MultiThreadFileSchedulerTask<C>) mainTask;
     }
 
     /**
-     * 子任务模式
+     * 任务模式
      */
     interface Mode {
         /**
          * 读取模式
          */
-        int Read = 0;
+        int READ = 0;
         /**
          * 处理模式
          */
-        int Execute = 1;
+        int EXE = 1;
     }
 
 }

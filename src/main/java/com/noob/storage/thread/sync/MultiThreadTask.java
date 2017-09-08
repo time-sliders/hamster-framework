@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,10 +27,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * multiThreadTask.start();
  * </pre>
  *
+ * @param <C> 上下文Context
  * @author luyun
  * @see SubTask
  */
-public class MultiThreadTask {
+public class MultiThreadTask<C> {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiThreadTask.class);
 
@@ -42,21 +42,21 @@ public class MultiThreadTask {
     //当前多线程任务是否已经启动(已经启动则不允许再添加子任务)
     protected AtomicBoolean isStarted = new AtomicBoolean(false);
     //子线程任务列表
-    protected List<SubTask> subThreadTaskList;
+    protected List<SubTask<C>> subThreadTaskList;
     //可作为子线程共享内存,也可存储子线程参数
-    protected ConcurrentMap<String, Object> context;
+    protected C context;
 
     public MultiThreadTask() {
     }
 
-    public MultiThreadTask(ConcurrentMap<String, Object> context) {
+    public MultiThreadTask(C context) {
         this.context = context;
     }
 
     /**
      * 添加一个子线程任务
      */
-    public void addSubTask(SubTask task) {
+    public void addSubTask(SubTask<C> task) {
 
         if (task == null) {
             throw new NullPointerException("task must not be null!");
@@ -67,7 +67,7 @@ public class MultiThreadTask {
         }
 
         if (subThreadTaskList == null) {
-            subThreadTaskList = new LinkedList<SubTask>();
+            subThreadTaskList = new LinkedList<SubTask<C>>();
         }
 
         task.setMainTask(this);
@@ -116,7 +116,7 @@ public class MultiThreadTask {
             throw new RuntimeException("no sub tasks!");
         }
 
-        for (SubTask task : subThreadTaskList) {
+        for (SubTask<C> task : subThreadTaskList) {
             task.start();
         }
     }
