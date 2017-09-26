@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author luyun
  * @since 2017.01.18 (fund portfolio pre)
  */
-public class MySubTask extends SubTask {
+public class MySubTask extends SubTask<Void> {
 
     private static final AtomicLong index = new AtomicLong();
 
@@ -19,7 +19,7 @@ public class MySubTask extends SubTask {
     }
 
     @Override
-    protected void doBusiness(ConcurrentMap<String, Object> context) {
+    protected void doBusiness(Void context) {
         try {
             Thread.sleep(new Random().nextInt(10000));
             System.out.println(getName() + "\tend");

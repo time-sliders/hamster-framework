@@ -7,10 +7,10 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author luyun
  */
-public class PrintFileLineTask extends FileDataConsumerTask {
+public class PrintFileLineTask extends FileDataConsumerTask<Void> {
 
     @Override
-    public void processLineData(String lineData, ConcurrentMap<String, Object> context) throws InterruptedException {
+    public void processData(String lineData,Void v) throws InterruptedException {
         Thread.sleep(100L);
     }
 }

@@ -1,7 +1,7 @@
 package com.noob.storage.nio;
 
-import com.noob.storage.io.nio.client.NIOClient;
-import com.noob.storage.io.nio.server.NIOServer;
+import com.noob.storage.io.nio.demo.NIOClient;
+import com.noob.storage.io.nio.demo.NIOServer;
 
 /**
  * @author luyun
