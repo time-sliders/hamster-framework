@@ -16,11 +16,11 @@ import java.nio.channels.SocketChannel;
  * @version NIO
  * @since 2017.09.26
  */
-public class ClientConnectedEventHandler extends NIOEventHandler {
+public class ServerAcceptedEventHandler extends NIOEventHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClientConnectedEventHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServerAcceptedEventHandler.class);
 
-    public ClientConnectedEventHandler(SelectionKey selectionKey) {
+    public ServerAcceptedEventHandler(SelectionKey selectionKey) {
         super(selectionKey);
     }
 

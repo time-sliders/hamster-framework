@@ -1,6 +1,6 @@
 package com.noob.storage.io.nio.server;
 
-import com.alibaba.fastjson.JSON;
+import com.noob.storage.io.nio.SelectorEventLooper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,13 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * NIO 服务端组件
@@ -32,6 +26,8 @@ public class NIOServer {
      * 服务器端口
      */
     private int port;
+
+    private NIOServerEventDispatcher dispatcher;
 
     public NIOServer(int port) {
         this.port = port;
@@ -64,44 +60,7 @@ public class NIOServer {
             logger.info("NIOServer init success @ " + port);
 
             // ～～～～～～～～～～～等待客户端连接～～～～～～～～～～～
-            int n = 0;
-            while (true) {
-                System.out.println(n++);
-                if (selector.select() <= 0) {
-                    continue;
-                }
-
-                Iterator<SelectionKey> i = selector.selectedKeys().iterator();
-
-                while (i.hasNext()) {
-
-                    SelectionKey sk = i.next();
-
-                    i.remove();
-
-                    if (!sk.isValid()) {
-                        continue;
-                    }
-
-                    if (sk.isAcceptable()) {
-                        // 新的客户端连接进入
-                        System.out.println("accept");
-                        // 准备接收客户端发送数据
-                        SocketChannel socketChannel = ((ServerSocketChannel) sk.channel()).accept();
-                        if (socketChannel == null) {
-                            continue;
-                        }
-                        socketChannel.configureBlocking(false);
-                        socketChannel.register(sk.selector(), SelectionKey.OP_READ);
-                        System.out.println("register@" + socketChannel.toString() + " to selector");
-                    } else if (sk.isReadable()) {
-                        // 可以从channel中读取数据
-
-                    } else if (sk.isWritable()) {
-                        // 可以向channel中写出数据
-                    }
-                }
-            }
+            SelectorEventLooper.loop(selector, dispatcher);
         } catch (IOException e) {
             e.printStackTrace();
         }

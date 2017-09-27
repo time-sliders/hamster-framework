@@ -35,7 +35,14 @@ public class NIOServerEventDispatcher implements Dispatcher<SelectionKey> {
     }
 
     @Override
-    public void dispatch(SelectionKey selectionKey) {
+    public void dispatch(SelectionKey sk) {
+        if (sk.isAcceptable()) {
+            tpe.submit(new ServerAcceptedEventHandler(sk));
+        } else if (sk.isReadable()) {
+            tpe.submit(new ServerReadEventHandler(sk));
+        } else if (sk.isWritable()) {
+            tpe.submit(new ServerWriteEventHandler(sk));
+        }
 
     }
 }

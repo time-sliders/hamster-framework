@@ -1,6 +1,6 @@
 package com.noob.storage.io.nio.client;
 
-import com.alibaba.fastjson.JSON;
+import com.noob.storage.io.nio.SelectorEventLooper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,11 +10,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * NIO 客户端
@@ -37,17 +32,7 @@ public class NIOClient {
      */
     private int port;
 
-    private static ThreadPoolExecutor tpe;
-
-    static {
-        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<>(), new RejectedExecutionHandler() {
-            @Override
-            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                logger.warn("------------------reject>>>>" + JSON.toJSONString(r));
-            }
-        });
-        tpe.allowCoreThreadTimeOut(true);
-    }
+    private NIOClientEventDispatcher dispatcher;
 
     public NIOClient(String serverIp, int port) {
         this.serverIp = serverIp;
@@ -68,45 +53,17 @@ public class NIOClient {
             Selector selector = SelectorProvider.provider().openSelector();
             // 2.开启客户端channel
             SocketChannel sc = SocketChannel.open();
+            // 4.设置非模式
+            sc.configureBlocking(false);
             // 3.绑定服务端地址
             sc.connect(new InetSocketAddress(serverIp, port));
-            // 4.设置非绑定模式
-            sc.configureBlocking(false);
             // 5.注册到选择器
             sc.register(selector, SelectionKey.OP_CONNECT);
 
             logger.info("NIOClient init success @ " + serverIp + ":" + port);
 
             // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
-            int n = 0;
-            while (true) {
-                System.out.println(n++);
-                if (selector.select() <= 0) {
-                    continue;
-                }
-
-                Iterator<SelectionKey> i = selector.selectedKeys().iterator();
-
-                while (i.hasNext()) {
-
-                    SelectionKey sk = i.next();
-
-                    i.remove();
-
-                    if (!sk.isValid()) {
-                        continue;
-                    }
-
-                    if (sk.isConnectable()) {
-                        // 可以连接到服务器
-                        System.out.println("connected");
-                    } else if (sk.isWritable()) {
-                        // 可以写数据
-                    } else if (sk.isReadable()) {
-                        // 可以读数据
-                    }
-                }
-            }
+            SelectorEventLooper.loop(selector, dispatcher);
 
         } catch (IOException e) {
             e.printStackTrace();

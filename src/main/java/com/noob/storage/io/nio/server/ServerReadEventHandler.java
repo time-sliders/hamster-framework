@@ -1,11 +1,10 @@
 package com.noob.storage.io.nio.server;
 
+import com.noob.storage.io.nio.ChannelUtil;
 import com.noob.storage.io.nio.NIOEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
@@ -32,21 +31,15 @@ public class ServerReadEventHandler extends NIOEventHandler {
                 return;
             }
 
-            ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            while (socketChannel.read(buffer) != -1) {
-                buffer.flip();
-                bos.write(buffer.array());
-                buffer.clear();
-            }
-            String s = bos.toString();
+            String s = ChannelUtil.readString(socketChannel);
             System.out.println("Server read:" + s);
             selectionKey.attach(s);
 
-            socketChannel.register(selectionKey.selector(), SelectionKey.OP_WRITE);
+            selectionKey.interestOps(SelectionKey.OP_WRITE);
+            System.out.println("Server interestOps >>> OP_WRITE");
 
         } catch (Exception e) {
-            logger.error("服务端读取数据异常");
+            logger.error("服务端读取数据异常", e);
         }
     }
 }
