@@ -31,8 +31,8 @@ public class ServerAcceptedEventHandler extends NIOEventHandler {
             if (sc == null) {
                 return;
             }
-            sc.register(selectionKey.selector(), SelectionKey.OP_READ);
             sc.configureBlocking(false);
+            sc.register(selectionKey.selector(), SelectionKey.OP_READ);
         } catch (IOException e) {
             logger.warn("客户端连接处理异常", e);
         }

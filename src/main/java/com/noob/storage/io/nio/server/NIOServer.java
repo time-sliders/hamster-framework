@@ -27,8 +27,6 @@ public class NIOServer {
      */
     private int port;
 
-    private NIOServerEventDispatcher dispatcher;
-
     public NIOServer(int port) {
         this.port = port;
     }
@@ -60,7 +58,7 @@ public class NIOServer {
             logger.info("NIOServer init success @ " + port);
 
             // ～～～～～～～～～～～等待客户端连接～～～～～～～～～～～
-            SelectorEventLooper.loop(selector, dispatcher);
+            SelectorEventLooper.loop(selector, new NIOServerEventDispatcher());
         } catch (IOException e) {
             e.printStackTrace();
         }

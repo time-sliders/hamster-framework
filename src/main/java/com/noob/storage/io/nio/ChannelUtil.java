@@ -11,10 +11,10 @@ import java.nio.channels.SocketChannel;
  */
 public class ChannelUtil {
 
-
     public static String readString(SocketChannel socketChannel) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
         int index = socketChannel.read(buffer);
+        buffer.flip();
         return new String(buffer.array(), 0, index,"UTF-8");
     }
 }

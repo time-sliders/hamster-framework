@@ -35,7 +35,6 @@ public class ClientWriteEventHandler extends NIOEventHandler {
             System.out.println("client write >>> " + resp);
 
             selectionKey.interestOps(SelectionKey.OP_READ);
-            System.out.println("client interestOps >>> OP_READ");
 
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);

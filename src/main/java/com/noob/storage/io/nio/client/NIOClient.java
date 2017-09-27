@@ -32,8 +32,6 @@ public class NIOClient {
      */
     private int port;
 
-    private NIOClientEventDispatcher dispatcher;
-
     public NIOClient(String serverIp, int port) {
         this.serverIp = serverIp;
         this.port = port;
@@ -63,7 +61,7 @@ public class NIOClient {
             logger.info("NIOClient init success @ " + serverIp + ":" + port);
 
             // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
-            SelectorEventLooper.loop(selector, dispatcher);
+            SelectorEventLooper.loop(selector, new NIOClientEventDispatcher());
 
         } catch (IOException e) {
             e.printStackTrace();

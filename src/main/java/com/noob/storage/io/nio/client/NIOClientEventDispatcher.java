@@ -37,7 +37,7 @@ public class NIOClientEventDispatcher implements Dispatcher<SelectionKey> {
     @Override
     public void dispatch(SelectionKey sk) {
         if (sk.isConnectable()) {
-            tpe.submit(new ClientConnectEventHandler(sk));
+            new ClientConnectEventHandler(sk).run();
         } else if (sk.isWritable()) {
             tpe.submit(new ClientWriteEventHandler(sk));
         } else if (sk.isReadable()) {
