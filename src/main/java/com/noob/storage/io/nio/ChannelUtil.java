@@ -15,6 +15,9 @@ public class ChannelUtil {
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
         int index = socketChannel.read(buffer);
         buffer.flip();
-        return new String(buffer.array(), 0, index,"UTF-8");
+        if (index > 0) {
+            return new String(buffer.array(), 0, index, "UTF-8");
+        }
+        return null;
     }
 }

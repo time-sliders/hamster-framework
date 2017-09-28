@@ -32,6 +32,8 @@ public class NIOClient {
      */
     private int port;
 
+    private Selector selector;
+
     public NIOClient(String serverIp, int port) {
         this.serverIp = serverIp;
         this.port = port;
@@ -48,7 +50,29 @@ public class NIOClient {
             // ～～～～～～～～～～～客户端初始化～～～～～～～～～～～
 
             // 1.开启客户端选择器
-            Selector selector = SelectorProvider.provider().openSelector();
+            selector = SelectorProvider.provider().openSelector();
+
+            logger.info("NIOClient init success @ " + serverIp + ":" + port);
+
+            new Thread() {
+                public void run() {
+                    int i = 0;
+                    while (i++ < 10000) {
+                        register();
+                    }
+                }
+            }.start();
+
+            // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
+            SelectorEventLooper.loop(selector, new NIOClientEventDispatcher());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void register() {
+        try {
             // 2.开启客户端channel
             SocketChannel sc = SocketChannel.open();
             // 4.设置非模式
@@ -57,14 +81,8 @@ public class NIOClient {
             sc.connect(new InetSocketAddress(serverIp, port));
             // 5.注册到选择器
             sc.register(selector, SelectionKey.OP_CONNECT);
-
-            logger.info("NIOClient init success @ " + serverIp + ":" + port);
-
-            // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
-            SelectorEventLooper.loop(selector, new NIOClientEventDispatcher());
-
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn(e.getMessage(), e);
         }
     }
 

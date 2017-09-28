@@ -31,7 +31,7 @@ public class ClientReadEventHandler extends NIOEventHandler {
             }
 
             String s = ChannelUtil.readString(socketChannel);
-            System.out.println("Client read:" + s);
+            System.out.println("Client read:[" + s + "]");
 
             // 通道关闭
             socketChannel.close();

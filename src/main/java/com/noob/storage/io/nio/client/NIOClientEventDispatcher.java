@@ -39,9 +39,9 @@ public class NIOClientEventDispatcher implements Dispatcher<SelectionKey> {
         if (sk.isConnectable()) {
             new ClientConnectEventHandler(sk).run();
         } else if (sk.isWritable()) {
-            tpe.submit(new ClientWriteEventHandler(sk));
+            new ClientWriteEventHandler(sk).run();
         } else if (sk.isReadable()) {
-            tpe.submit(new ClientReadEventHandler(sk));
+            new ClientReadEventHandler(sk).run();
         }
     }
 }

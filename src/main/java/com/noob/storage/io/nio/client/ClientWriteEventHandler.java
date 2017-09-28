@@ -25,14 +25,14 @@ public class ClientWriteEventHandler extends NIOEventHandler {
     public void handle(SelectionKey selectionKey) {
         try {
             SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-            String resp = "Hello Server";
+            String msg = selectionKey.toString();
 
             // 数据写出到通道
             ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
-            buffer.put(resp.getBytes("UTF-8"));
+            buffer.put(msg.getBytes("UTF-8"));
             buffer.flip();
             socketChannel.write(buffer);
-            System.out.println("client write >>> " + resp);
+            System.out.println("client write >>> [" + msg + "]");
 
             selectionKey.interestOps(SelectionKey.OP_READ);
 

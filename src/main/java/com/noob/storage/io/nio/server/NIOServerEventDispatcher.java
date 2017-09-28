@@ -39,9 +39,9 @@ public class NIOServerEventDispatcher implements Dispatcher<SelectionKey> {
         if (sk.isAcceptable()) {
             new ServerAcceptedEventHandler(sk).run();
         } else if (sk.isReadable()) {
-            tpe.submit(new ServerReadEventHandler(sk));
+            new ServerReadEventHandler(sk).run();
         } else if (sk.isWritable()) {
-            tpe.submit(new ServerWriteEventHandler(sk));
+            new ServerWriteEventHandler(sk).run();
         }
 
     }

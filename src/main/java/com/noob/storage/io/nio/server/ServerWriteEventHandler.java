@@ -1,6 +1,5 @@
 package com.noob.storage.io.nio.server;
 
-import com.noob.storage.io.nio.ChannelUtil;
 import com.noob.storage.io.nio.NIOEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +28,7 @@ public class ServerWriteEventHandler extends NIOEventHandler {
         try {
             SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
             String s = (String) selectionKey.attachment();
-            String resp = "DEFAULT";
-            if ("Hello Server".equalsIgnoreCase(s)) {
-                resp = "Hello Client";
-            }
+            String resp = "Hello," + s;
 
             // 数据写出到通道
             ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
@@ -46,13 +42,12 @@ public class ServerWriteEventHandler extends NIOEventHandler {
              * 应的粘包。
              */
             socketChannel.write(buffer);
-            System.out.println("Server write >>> " + resp);
+            System.out.println("Server write >>> [" + resp + "]");
 
             // 通道关闭
-            socketChannel.close();
+            //socketChannel.close();
             // 取消注册
             selectionKey.cancel();
-            System.out.println("Server cancel from selector!");
 
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);

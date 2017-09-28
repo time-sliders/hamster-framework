@@ -1,5 +1,6 @@
 package com.noob.storage.io.nio.server;
 
+import com.alibaba.dubbo.common.utils.StringUtils;
 import com.noob.storage.io.nio.ChannelUtil;
 import com.noob.storage.io.nio.NIOEventHandler;
 import org.slf4j.Logger;
@@ -32,11 +33,14 @@ public class ServerReadEventHandler extends NIOEventHandler {
             }
 
             String s = ChannelUtil.readString(socketChannel);
-            System.out.println("Server read:" + s);
+            if (StringUtils.isBlank(s)) {
+                socketChannel.close();
+                selectionKey.cancel();
+                return;
+            }
             selectionKey.attach(s);
 
             selectionKey.interestOps(SelectionKey.OP_WRITE);
-            System.out.println("Server interestOps >>> OP_WRITE");
 
         } catch (Exception e) {
             logger.error("服务端读取数据异常", e);
