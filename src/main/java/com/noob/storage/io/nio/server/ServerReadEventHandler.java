@@ -38,6 +38,8 @@ public class ServerReadEventHandler extends NIOEventHandler {
                 selectionKey.cancel();
                 return;
             }
+
+            logger.info("Server READ:" + s);
             selectionKey.attach(s);
 
             selectionKey.interestOps(SelectionKey.OP_WRITE);

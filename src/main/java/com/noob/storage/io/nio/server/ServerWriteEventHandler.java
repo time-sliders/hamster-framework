@@ -42,10 +42,10 @@ public class ServerWriteEventHandler extends NIOEventHandler {
              * 应的粘包。
              */
             socketChannel.write(buffer);
-            System.out.println("Server write >>> [" + resp + "]");
+            logger.info("Server WRITE >>>" + resp);
 
             // 通道关闭
-            //socketChannel.close();
+            socketChannel.close();
             // 取消注册
             selectionKey.cancel();
 

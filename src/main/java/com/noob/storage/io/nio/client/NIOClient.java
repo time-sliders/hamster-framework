@@ -54,14 +54,7 @@ public class NIOClient {
 
             logger.info("NIOClient init success @ " + serverIp + ":" + port);
 
-            new Thread() {
-                public void run() {
-                    int i = 0;
-                    while (i++ < 10000) {
-                        register();
-                    }
-                }
-            }.start();
+            register();
 
             // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
             SelectorEventLooper.loop(selector, new NIOClientEventDispatcher());

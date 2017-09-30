@@ -32,7 +32,7 @@ public class ClientWriteEventHandler extends NIOEventHandler {
             buffer.put(msg.getBytes("UTF-8"));
             buffer.flip();
             socketChannel.write(buffer);
-            System.out.println("client write >>> [" + msg + "]");
+            logger.info("client WRITE >>> " + msg);
 
             selectionKey.interestOps(SelectionKey.OP_READ);
 
