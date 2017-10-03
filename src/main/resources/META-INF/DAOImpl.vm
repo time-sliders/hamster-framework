@@ -10,7 +10,7 @@ public class ${table.beanName}DAOImpl extends SqlSessionDaoSupport implements ${
 
 
     @Override
-    public List<${table.beanName}DO> query(${table.beanName}Query query) {
+    public List<${table.beanName}> query(${table.beanName}Query query) {
 
         Assert.notNull(query);
 
@@ -28,7 +28,7 @@ public class ${table.beanName}DAOImpl extends SqlSessionDaoSupport implements ${
     }
 
     @Override
-    public ${table.beanName}DO findById(Long id) {
+    public ${table.beanName} findById(Long id) {
 
         Assert.notNull(id, "id不能为空");
 
@@ -36,7 +36,7 @@ public class ${table.beanName}DAOImpl extends SqlSessionDaoSupport implements ${
     }
 
     @Override
-    public int updateById(${table.beanName}DO updateParam) {
+    public int updateById(${table.beanName} updateParam) {
 
         Assert.notNull(updateParam);
         Assert.notNull(updateParam.getId(), "id不能为空");
@@ -48,19 +48,19 @@ public class ${table.beanName}DAOImpl extends SqlSessionDaoSupport implements ${
     }
 
     @Override
-    public int insert(${table.beanName}DO ${table.injectName}DO) {
+    public int insert(${table.beanName} ${table.injectName}) {
 
-        checkParamForInsert(${table.injectName}DO);
+        checkParamForInsert(${table.injectName});
 
-        ${table.injectName}DO.setCreateTime(new Date());
-        ${table.injectName}DO.setModifyTime(null);
+        ${table.injectName}.setCreateTime(new Date());
+        ${table.injectName}.setModifyTime(null);
 
-        return this.getSqlSession().insert("${table.beanName}.INSERT", ${table.injectName}DO);
+        return this.getSqlSession().insert("${table.beanName}.INSERT", ${table.injectName});
     }
 
-    private void checkParamForInsert(${table.beanName}DO ${table.injectName}DO) {
+    private void checkParamForInsert(${table.beanName} ${table.injectName}) {
 
-        Assert.notNull(${table.injectName}DO);
+        Assert.notNull(${table.injectName});
 
         //TODO check code
 
