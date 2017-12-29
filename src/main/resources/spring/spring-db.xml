@@ -4,7 +4,6 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
 
     <tx:annotation-driven transaction-manager="transactionManager"/>
-    <!-- tbj_fund_dataSource -->
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
         <property name="url" value="${jdbc.druid.url}"/>
         <property name="username" value="${jdbc.druid.user}"/>
@@ -37,8 +36,8 @@
 
     <!-- myBatis文件 -->
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-        <property name="configLocation" value="classpath:META-INF/mybatis/mybatis-configuration.xml"/>
-        <property name="mapperLocations" value="classpath*:META-INF/mybatis/mapper/*.xml"/>
+        <property name="configLocation" value="classpath:mybatis/mybatis-configuration.xml"/>
+        <property name="mapperLocations" value="classpath*:mybatis/mapper/*.xml"/>
         <property name="dataSource" ref="dataSource"/>
     </bean>
 
