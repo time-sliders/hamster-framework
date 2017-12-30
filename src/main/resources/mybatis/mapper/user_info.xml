@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserInfo">
+
+    <resultMap id="BaseResultMap" type="UserInfo">
+        <id column="id"  property="id"/>
+        <result column="seq_no"  property="seqNo"/>
+        <result column="name"  property="name"/>
+        <result column="gmt_create"  property="gmtCreate"/>
+        <result column="gmt_modified"  property="gmtModified"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,seq_no,name,gmt_create,gmt_modified
+    </sql>
+
+    <sql id="Base_Value_List">
+        id,seq_no,name,gmt_create,gmt_modified
+    </sql>
+
+    <select id="FIND_BY_ID" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List" />
+        from
+            user_info
+        where
+            id = #{id}
+    </select>
+
+
+    <sql id="_sql_where">
+        <if test="id != null">
+            and id=#{id}
+        </if>
+        <if test="seqNo != null and seqNo != '' ">
+            and seq_no=#{seqNo}
+        </if>
+        <if test="name != null and name != '' ">
+            and name=#{name}
+        </if>
+    </sql>
+
+    <insert id="INSERT" parameterType="UserInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_info (<include refid="Base_Column_List" />)
+        VALUES(
+            #{id},#{seqNo},#{name},#{gmtCreate},#{gmtModified}
+        )
+    </insert>
+
+    <update id="UPDATE_BY_ID" parameterType="UserInfo">
+        update
+            user_info
+        <set>
+            <if test="seqNo != null and seqNo != '' ">
+                seq_no=#{seqNo},
+            </if>
+            <if test="name != null and name != '' ">
+                name=#{name},
+            </if>
+            gmt_modified=#{gmtModified}
+        </set>
+        where
+            id = #{id}
+    </update>
+
+    <sql id="_select_limit">
+        <if test="offset != null and limit != null">
+            limit #{offset} , #{limit}
+        </if>
+    </sql>
+
+    <sql id="_select_orderby">
+        <if test="orderBy != null">
+            ORDER BY ${orderBy.columnName} ${orderBy.type}
+        </if>
+    </sql>
+
+    <select id="QUERY" parameterType="map" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from
+            user_info
+        <where>
+            <trim prefix="" prefixOverrides="and" suffix="">
+                <include refid="_sql_where"/>
+            </trim>
+        </where>
+        <include refid="_select_orderby" />
+        <include refid="_select_limit" />
+    </select>
+
+    <select id="COUNT" parameterType="map" resultType="int">
+        select
+            count(1)
+        from
+            user_info
+        <where>
+            <trim prefix="" prefixOverrides="and" suffix="">
+                <include refid="_sql_where"/>
+            </trim>
+        </where>
+    </select>
+
+</mapper>

@@ -8,9 +8,12 @@ public class ${table.beanName}ServiceImpl implements ${table.beanName}Service {
     @Autowired
     private ${table.beanName}DAO ${table.injectName}DAO;
 
+    @Autowired
+    private ${table.beanName}DOConverter converter;
+
     @Override
-    public List<${table.beanName}> query(${table.beanName}Query query) {
-        return ${table.injectName}DAO.query(query);
+    public List<${table.beanName}> list(${table.beanName}Query query) {
+        return converter.asModelList(${table.injectName}DAO.list(query));
     }
 
     @Override
@@ -20,17 +23,17 @@ public class ${table.beanName}ServiceImpl implements ${table.beanName}Service {
 
     @Override
     public ${table.beanName} findById(Long id) {
-        return ${table.injectName}DAO.findById(id);
+        return converter.toModel(${table.injectName}DAO.findById(id));
     }
 
     @Override
     public int updateById(${table.beanName} updateParam) {
-        return ${table.injectName}DAO.updateById(updateParam);
+        return ${table.injectName}DAO.updateById(converter.toDto(updateParam));
     }
 
     @Override
     public int insert(${table.beanName} ${table.injectName}) {
-        return ${table.injectName}DAO.insert(${table.injectName});
+        return ${table.injectName}DAO.insert(converter.toDto(${table.injectName}));
     }
 
 }

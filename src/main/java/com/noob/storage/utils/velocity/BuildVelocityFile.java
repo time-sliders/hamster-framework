@@ -19,16 +19,16 @@ import java.util.zip.ZipOutputStream;
  */
 public class BuildVelocityFile {
 
-    private static final String ip = "192.168.1.105";
+    private static final String ip = "127.0.0.1";
     private static final String port = "3306";
-    private static final String schema = "tz_transfer";
-    private static final String userName = "tbj";
-    private static final String password = "tbj900900";
+    private static final String schema = "zhw";
+    private static final String userName = "root";
+    private static final String password = "root";
 
     public static void main(String[] args) {
 
         String[] tables = new String[]{
-                "transfer_redeem_daily_summary_sum"
+                "user_info"
         };
 
         if (tables.length <= 0) {
@@ -91,6 +91,9 @@ public class BuildVelocityFile {
 
         buffer = TemplateBuilder.build(table, TemplateBuilder.DAOImpl);
         printFile(buffer, table.getNamespace(), table.getBeanName() + "DAOImpl.java", out);
+
+        buffer = TemplateBuilder.build(table, TemplateBuilder.DOConverter);
+        printFile(buffer, table.getNamespace(), table.getBeanName() + "DOConverter.java", out);
 
         out.flush();
     }

@@ -3,14 +3,14 @@ import java.util.List;
 public interface ${table.beanName}Service {
 
     /**
-     * 根据查询参数查询数据
+     * 批量查询
      *
      * @param query 查询参数
      */
-    List<${table.beanName}> query(${table.beanName}Query query);
+    List<${table.beanName}> list(${table.beanName}Query query);
 
     /**
-     * 根据查询参数查询数据总量
+     * 查询总量
      *
      * @param query 查询参数
      */
@@ -31,7 +31,7 @@ public interface ${table.beanName}Service {
     int updateById(${table.beanName} updateParam);
 
     /**
-     * 新增一条记录
+     * 保存数据
      */
     int insert(${table.beanName} ${table.injectName});
 }

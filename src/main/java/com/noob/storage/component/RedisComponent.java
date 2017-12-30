@@ -54,7 +54,6 @@ import java.util.Map.Entry;
  * </bean>
  * ～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
  */
-@Component
 public class RedisComponent implements InitializingBean {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
