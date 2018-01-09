@@ -49,7 +49,7 @@ public class NIOServer {
             // 2.开启服务端通道
             ServerSocketChannel ssc = ServerSocketChannel.open();
             // 3.绑定服务端通道端口
-            ssc.bind(new InetSocketAddress(port));
+            // ssc.bind(new InetSocketAddress(port)); // TODO 低版本不支持，先注释掉
             // 4.开启非阻塞模式
             ssc.configureBlocking(false);
             // 5.注册通道到选择器

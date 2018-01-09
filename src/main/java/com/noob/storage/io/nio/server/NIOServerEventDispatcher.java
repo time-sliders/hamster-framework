@@ -25,7 +25,7 @@ public class NIOServerEventDispatcher implements Dispatcher<SelectionKey> {
     private static ThreadPoolExecutor tpe;
 
     static {
-        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<>(), new RejectedExecutionHandler() {
+        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(), new RejectedExecutionHandler() {
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
                 logger.warn("------------------reject>>>>" + JSON.toJSONString(r));

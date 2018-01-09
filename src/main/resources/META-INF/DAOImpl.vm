@@ -41,8 +41,8 @@ public class ${table.beanName}DAOImpl extends SqlSessionDaoSupport implements ${
         Assert.notNull(updateParam);
         Assert.notNull(updateParam.getId(), "id不能为空");
 
-        updateParam.setGmtCreate(null);
-        updateParam.setGmtModified(new Date());
+        updateParam.setCreateTime(null);
+        updateParam.setModifyTime(new Date());
 
         return this.getSqlSession().update("${table.beanName}.UPDATE_BY_ID", updateParam);
     }
@@ -52,8 +52,8 @@ public class ${table.beanName}DAOImpl extends SqlSessionDaoSupport implements ${
 
         checkParamForInsert(${table.injectName}DO);
 
-        ${table.injectName}DO.setGmtCreate(new Date());
-        ${table.injectName}DO.setGmtModified(null);
+        ${table.injectName}DO.setCreateTime(new Date());
+        ${table.injectName}DO.setModifyTime(null);
 
         return this.getSqlSession().insert("${table.beanName}.INSERT", ${table.injectName}DO);
     }

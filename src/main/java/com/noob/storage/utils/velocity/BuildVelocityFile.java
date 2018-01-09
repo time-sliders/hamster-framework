@@ -19,16 +19,24 @@ import java.util.zip.ZipOutputStream;
  */
 public class BuildVelocityFile {
 
+    private static final String ip = "192.168.1.16";
+    private static final String port = "3306";
+    private static final String schema = "tz_transfer";
+    private static final String userName = "tbjtest";
+    private static final String password = "tbj900900";
+
+    /*
     private static final String ip = "127.0.0.1";
     private static final String port = "3306";
     private static final String schema = "zhw";
     private static final String userName = "root";
     private static final String password = "root";
+    */
 
     public static void main(String[] args) {
 
         String[] tables = new String[]{
-                "user_info"
+                "transfer_product_detail"
         };
 
         if (tables.length <= 0) {

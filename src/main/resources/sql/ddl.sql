@@ -1,3 +1,5 @@
+create database zhw default character set utf8 collate utf8_general_ci;
+
 create table user_info(
   id BIGINT UNSIGNED primary key auto_increment comment 'id',
   seq_no varchar(32) DEFAULT null comment '序列号',

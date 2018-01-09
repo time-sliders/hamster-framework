@@ -19,7 +19,7 @@ public class CacheQueue<K, V> {
 
     private LinkedList<K> keyQueue;
 
-    private Map<K, V> valueMap = new HashMap<>();
+    private Map<K, V> valueMap = new HashMap<K, V>();
 
     /**
      * 缓存队列
@@ -31,7 +31,7 @@ public class CacheQueue<K, V> {
             throw new IllegalArgumentException("capacity:" + capacity);
         }
         this.capacity = capacity;
-        keyQueue = new LinkedList<>();
+        keyQueue = new LinkedList<K>();
     }
 
     public synchronized void put(K key, V value) {

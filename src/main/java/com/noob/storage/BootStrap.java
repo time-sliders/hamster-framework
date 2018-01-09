@@ -5,15 +5,11 @@ import com.noob.storage.business.model.UserInfo;
 import com.noob.storage.business.service.UserInfoService;
 import com.noob.storage.common.Millisecond;
 import com.noob.storage.component.RedisComponent;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
-import sun.reflect.Reflection;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
 
 /**
  * @author luyun
@@ -25,10 +21,11 @@ public class BootStrap {
     private static final Logger logger = LoggerFactory.getLogger(BootStrap.class);
 
     public static void main(String[] args) {
+        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "/Users/zhangwei/Downloads/cglib/");
         FileSystemXmlApplicationContext ac = new FileSystemXmlApplicationContext("classpath:spring/spring-context.xml");
         envCheck(ac);
         UserManagerComponent userManagerComponent = null;
-        UserInfoService userInfoService = null;
+        UserInfoService userInfoService  = null;
 
         try {
             userManagerComponent = ac.getBean("userManagerComponent", UserManagerComponent.class);

@@ -15,11 +15,13 @@ import java.lang.reflect.Field;
 public class TestCglib {
 
     public static void main(String[] args) {
+
         System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "/Users/zhangwei/Downloads/cglib/");
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(CglibTarget.class);
         enhancer.setCallback(new TargetInterceptor());
         CglibTarget cglibTarget = (CglibTarget) enhancer.create();
+
         cglibTarget.targetMethod();
         System.out.println(cglibTarget.getClass().getName());
         System.out.println(cglibTarget.getClass().getSuperclass().getName());
