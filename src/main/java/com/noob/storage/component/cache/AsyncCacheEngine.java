@@ -38,7 +38,7 @@ public abstract class AsyncCacheEngine<Q/*query param Type*/, R/*result type*/> 
      * 所有引擎共享的异步数据加载线程池
      */
     private static final ThreadPoolExecutor pool = new ThreadPoolExecutor(1, 2, 5,
-            TimeUnit.SECONDS, new LinkedBlockingDeque<>(10000), new RejectedExecutionHandler() {
+            TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(10000), new RejectedExecutionHandler() {
         @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
             logger.warn("AsyncCacheEngine share pool full,reject task:[" + JSON.toJSONString(r) + "]");

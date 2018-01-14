@@ -19,10 +19,6 @@ public class UserManagerComponent {
     @Autowired
     private UserInfoDAO userInfoDAO;
 
-    public UserManagerComponent() {
-        System.out.println(UserManagerComponent.class);
-    }
-
     public void noTransaction() {
         transaction();
     }

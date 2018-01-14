@@ -151,7 +151,7 @@ public class LuceneComponent {
                 return null;
             }
 
-            l = new LinkedList<>();
+            l = new LinkedList<E>();
             for (ScoreDoc hit : hits) {
                 Document hitDoc = searcher.doc(hit.doc);
                 E e = converter.toDto(hitDoc);
