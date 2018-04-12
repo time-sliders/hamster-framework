@@ -47,6 +47,23 @@
     #end
     </sql>
 
+    <sql id="_update_where">
+        #foreach($column in $table.columns)
+            #if(!$column.isPrimaryKey())
+                #if($column.javaType == 'java.lang.String')
+                    #set($updateTest=${column.fieldName}+" != null and "+${column.fieldName}+" != '' ")
+                #else
+                    #set($updateTest=${column.fieldName}+" != null")
+                #end
+                <if test="$updateTest">
+                    #set($value="#{"+$column.fieldName+"}")
+                    ${column.columnName}=${value}#if( $foreach.hasNext ),#end
+
+                </if>
+            #end
+        #end
+    </sql>
+
     <insert id="INSERT" parameterType="${table.namespace}" useGeneratedKeys="true" keyProperty="${table.primaryKey.fieldName}">
         INSERT INTO ${table.tableName} (<include refid="Base_Column_List" />)
         VALUES(
@@ -58,20 +75,7 @@
         update
             ${table.tableName}
         <set>
-        #foreach($column in $table.columns)
-        #if(!$column.isPrimaryKey())
-            #if($column.javaType == 'java.lang.String')
-                #set($updateTest=${column.fieldName}+" != null and "+${column.fieldName}+" != '' ")
-            #else
-                #set($updateTest=${column.fieldName}+" != null")
-            #end
-            <if test="$updateTest">
-                #set($value="#{"+$column.fieldName+"}")
-                ${column.columnName}=${value}#if( $foreach.hasNext ),#end
-
-            </if>
-            #end
-        #end
+            <include refid="_update_where"/>
         </set>
         where
             id = #{id}
@@ -105,7 +109,7 @@
 
     <select id="COUNT" parameterType="map" resultType="int">
         select
-            count(1)
+            count(*)
         from
             ${table.tableName}
         <where>
