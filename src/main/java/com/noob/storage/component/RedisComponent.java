@@ -4,11 +4,11 @@ import com.noob.storage.common.Millisecond;
 import com.noob.storage.rpc.serializer.JsonSerializer;
 import com.noob.storage.rpc.serializer.Serializer;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.util.SafeEncoder;
@@ -40,7 +40,7 @@ import java.util.Map.Entry;
  * <property name="testOnBorrow" value="${redis.pool.testOnBorrow}" />
  * <property name="testOnReturn" value="${redis.pool.testOnReturn}" />
  * </bean>
- * <bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool">
+ * <bean id="pool" class="redis.clients.jedis.ShardedJedisPool">
  * <constructor-arg index="0" ref="jedisPoolConfig" />
  * <constructor-arg index="1">
  * <list>
@@ -61,88 +61,94 @@ public class RedisComponent implements InitializingBean {
     private static final Long LOCK_EXPIRED_TIME = Millisecond.FIVE_SECONDS;// 分布式锁的失效时间
 
     @Autowired
-    private ShardedJedisPool shardedJedisPool;
+    private ShardedJedisPool pool;
 
     private Serializer serializer;
 
     /*--***************** 常用方法 *******************/
 
     /**
-     * 获取一个锁
-     */
-    public boolean acquireLock(String lock) {
-        return acquireLock(lock, LOCK_EXPIRED_TIME);
-    }
-
-
-    /**
-     * 获取一个锁，自旋等待参数tryTime规定时间
-     *
-     * @param expired 锁的失效时间（毫秒）
-     * @param tryTime 获取锁等待时间（毫秒）
-     */
-    public boolean acquireLock(String lock, long expired, int tryTime) {
-        long beginTime = System.currentTimeMillis();
-        boolean lockFlag = acquireLock(lock, expired);
-
-        while (!lockFlag) {
-            lockFlag = acquireLock(lock, expired);
-            if ((System.currentTimeMillis() - beginTime) >= tryTime) {
-                // 等待超时，
-                return lockFlag;
-            }
-        }
-        return true;
-    }
-
-    /**
      * 获取一个锁 必须保证分布式环境的多个主机的时钟是一致的
      *
+     * @param lockKey 锁Key
      * @param expired 锁的失效时间（毫秒）
      */
     public boolean acquireLock(String lockKey, long expired) {
+
         ShardedJedis jedis = null;
-        boolean success = false;
+
         try {
-            jedis = shardedJedisPool.getResource();
-            long value = System.currentTimeMillis() + expired + 1;
-            // 通过setnx获取一个lock
-            long acquired = jedis.setnx(lockKey, String.valueOf(value));
-            if (acquired == 1) {
-                // setnx成功，则成功获取一个锁
-                success = true;
-            } else {
-                // setnx失败，说明锁仍然被其他对象保持，检查其是否已经超时
-                long oldValue = Long.valueOf(jedis.get(lockKey));
-                if (oldValue < System.currentTimeMillis()) {
-                    // 超时
-                    String getValue = jedis.getSet(lockKey, String.valueOf(value));
-                    // 获取锁成功
-                    // 已被其他进程捷足先登了
-                    success = Long.valueOf(getValue) == oldValue;
+
+            jedis = pool.getResource();
+            String value = String.valueOf(System.currentTimeMillis() + expired + 1);
+            int tryTimes = 0;
+
+            while (tryTimes++ < 3) {
+
+                /*
+                 *  1. 尝试锁
+                 *  setnx : set if not exist
+                 */
+                if (jedis.setnx(lockKey, value).equals(1L)) {
+                    return true;
+                }
+
+                /*
+                 * 2. 已经被别的线程锁住，判断是否失效
+                 */
+                String oldValue = jedis.get(lockKey);
+                if (StringUtils.isBlank(oldValue)) {
+                    /*
+                     * 2.1 value存的是超时时间，如果为空有2种情况
+                     *      1. 异常数据，没有value 或者 value为空字符
+                     *      2. 锁恰好被别的线程释放了
+                     * 此时需要尝试重新尝试，为了避免出现情况1时导致死循环，只重试3次
+                     */
+                    continue;
+                }
+
+                Long oldValueL = Long.valueOf(oldValue);
+                if (oldValueL < System.currentTimeMillis()) {
+                    /*
+                     * 已超时，重新尝试锁
+                     *
+                     * Redis:getSet 操作步骤：
+                     *      1.获取 Key 对应的 Value 作为返回值，不存在时返回null
+                     *      2.设置 Key 对应的 Value 为传入的值
+                     * 这里如果返回的 getValue != oldValue 表示已经被其它线程重新修改了
+                     */
+                    String getValue = jedis.getSet(lockKey, value);
+                    return oldValue.equals(getValue);
                 } else {
                     // 未超时，则直接返回失败
-                    success = false;
+                    return false;
                 }
             }
+
+            return false;
+
         } catch (Throwable e) {
             logger.error("acquireLock error", e);
+            return false;
+
         } finally {
             returnResource(jedis);
         }
-        return success;
     }
 
     /**
      * 释放锁
+     *
+     * @param lockKey key
      */
     public void releaseLock(String lockKey) {
         ShardedJedis jedis = null;
         try {
-            jedis = shardedJedisPool.getResource();
+            jedis = pool.getResource();
             long current = System.currentTimeMillis();
             // 避免删除非自己获取到的锁
-            if (jedis.get(lockKey) != null && current < Long.valueOf(jedis.get(lockKey))) {
+            String value = jedis.get(lockKey);
+            if (StringUtils.isNotBlank(value) && current < Long.valueOf(value)) {
                 jedis.del(lockKey);
             }
         } catch (Throwable e) {
@@ -469,7 +475,7 @@ public class RedisComponent implements InitializingBean {
     public <T> T execute(JedisAction<T> jedisAction) {
         ShardedJedis jedis = null;
         try {
-            jedis = shardedJedisPool.getResource();
+            jedis = pool.getResource();
             return jedisAction.action(jedis);
         } finally {
             returnResource(jedis);
@@ -482,7 +488,7 @@ public class RedisComponent implements InitializingBean {
     public <T> List<T> executeForList(JedisActionForList<T> jedisAction) {
         ShardedJedis jedis = null;
         try {
-            jedis = shardedJedisPool.getResource();
+            jedis = pool.getResource();
             return jedisAction.action(jedis);
         } finally {
             returnResource(jedis);
@@ -495,7 +501,7 @@ public class RedisComponent implements InitializingBean {
     public void execute(JedisActionNoResult jedisAction) {
         ShardedJedis jedis = null;
         try {
-            jedis = shardedJedisPool.getResource();
+            jedis = pool.getResource();
             jedisAction.action(jedis);
         } finally {
             returnResource(jedis);
@@ -541,7 +547,7 @@ public class RedisComponent implements InitializingBean {
         // 返还到连接池
         if (jedis != null) {
             try {
-                shardedJedisPool.returnResource(jedis);
+                pool.returnResource(jedis);
             } catch (Throwable e) {
                 returnBrokenResource(jedis);
             }
@@ -551,7 +557,7 @@ public class RedisComponent implements InitializingBean {
     private void returnBrokenResource(ShardedJedis jedis) {
         if (jedis != null) {
             try {
-                shardedJedisPool.returnBrokenResource(jedis);
+                pool.returnBrokenResource(jedis);
             } catch (Throwable e) {
                 logger.error("", e);
             }
@@ -561,18 +567,18 @@ public class RedisComponent implements InitializingBean {
     @PreDestroy
     public void destroy() {
         try {
-            shardedJedisPool.destroy();
+            pool.destroy();
         } catch (Throwable e) {
             logger.error("", e);
         }
     }
 
-    public ShardedJedisPool getShardedJedisPool() {
-        return shardedJedisPool;
+    public ShardedJedisPool getPool() {
+        return pool;
     }
 
-    public void setShardedJedisPool(ShardedJedisPool shardedJedisPool) {
-        this.shardedJedisPool = shardedJedisPool;
+    public void setPool(ShardedJedisPool pool) {
+        this.pool = pool;
     }
 
     public Serializer getSerializer() {

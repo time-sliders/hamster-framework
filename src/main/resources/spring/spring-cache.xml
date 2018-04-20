@@ -11,7 +11,7 @@
 		<property name="testOnReturn" value="${redis.pool.testOnReturn}" />
 	</bean>
 	
-	<bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool">
+	<bean id="pool" class="redis.clients.jedis.ShardedJedisPool">
 		<constructor-arg index="0" ref="jedisPoolConfig" />
 		<constructor-arg index="1">
 			<list>
@@ -26,7 +26,7 @@
 	</bean>
 	
 	<bean id="redisComponent" class="com.noob.storage.component.RedisComponent" destroy-method="destroy">
-    	<property name="shardedJedisPool" ref="shardedJedisPool"/>
+    	<property name="pool" ref="pool"/>
 	</bean>
 
 </beans>
