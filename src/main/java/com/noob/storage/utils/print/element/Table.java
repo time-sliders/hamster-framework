@@ -20,13 +20,12 @@ public class Table implements ElementInterface {
         Collections.sort(rowList);
         StringBuilder sb = new StringBuilder();
         //style="font-family:verdana;color:red"
-        sb.append("<html>" +
-                "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>" +
-                "<table style=\"border-collapse:collapse\" align=\"center\" width=\"800\" border=\"5\" bordercolor=\"gray\">");
+        sb.append("<div>" +
+                "<table style=\"border-collapse:collapse\" align=\"center\" width=\"800\" border=\"0\" bordercolor=\"gray\">");
         for (Row row : rowList) {
             sb.append(row.toHtml(maxCols));
         }
-        sb.append("</table></html>");
+        sb.append("</table></div>");
         return sb.toString();
     }
 

@@ -1,9 +1,14 @@
 package com.noob.storage.utils.print;
 
+
+import com.alibaba.fastjson.JSON;
+import com.noob.storage.model.JobResult;
 import com.noob.storage.utils.print.element.Row;
 import com.noob.storage.utils.print.element.Table;
 import com.noob.storage.utils.print.element.TableElement;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -22,20 +27,39 @@ import java.util.Map;
  */
 public class TablePrinter {
 
+    private static final Logger logger = LoggerFactory.getLogger(TablePrinter.class);
+
     /**
      * 构建Html信息
      */
     public static String printHtml(Object o) {
 
-        /*
-         * 1. 解析到数据模型
-         */
-        Table table = reflectToTableModel(o);
-        if (table == null) {
-            return null;
+        try {
+            //如果是JobResult对象 直接finish掉
+            if (o instanceof JobResult) {
+                JobResult object = (JobResult) o;
+                object.finish();
+            }
+        } catch (Exception e) {
+            logger.warn("", e);
         }
 
-        return table.toHtml(table.getCols());
+        try {
+
+            /*
+             * 1. 解析到数据模型
+             */
+            Table table = reflectToTableModel(o);
+            if (table == null) {
+                return null;
+            }
+
+            return table.toHtml(table.getCols());
+
+        } catch (Throwable e) {
+            logger.error("TablePrinter打印对象出现异常:" + JSON.toJSONString(o), e);
+            return "TablePrinter打印对象出现异常,请查看日志并排查";
+        }
     }
 
     private static Table reflectToTableModel(Object o) {

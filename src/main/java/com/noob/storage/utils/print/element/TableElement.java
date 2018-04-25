@@ -1,8 +1,7 @@
 package com.noob.storage.utils.print.element;
 
-
-import com.noob.storage.utils.print.TableLocation;
-import org.apache.commons.lang.StringUtils;
+import com.tongbanjie.commons.util.print.TableLocation;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -33,8 +32,8 @@ public class TableElement implements Comparable<TableElement>, ElementInterface 
         StringBuilder sb = new StringBuilder();
         int curPrintedCols = 0;
         if (StringUtils.isNotBlank(fieldTitle)) {
-            sb.append("<td style=\"color:red\" align=\"center\" colspan='").append(maxCols)
-                    .append("'><strong>～～～～～～").append(fieldTitle).append("～～～～～～</strong></td></tr><tr>");
+            sb.append("<td style=\"background-color:#ccc\" align=\"center\" colspan='").append(maxCols)
+                    .append("'>").append(fieldTitle).append("</td></tr><tr>");
         }
         if (StringUtils.isNotBlank(propertyName)) {
             sb.append("<td>").append(propertyName).append("</td>");
@@ -43,14 +42,14 @@ public class TableElement implements Comparable<TableElement>, ElementInterface 
 
         if (value instanceof List) {
             List l = (List) value;
-            for (int i = 0; i < l.size(); i++) {
+            for (int i = l.size() - 1; i >= 0; i--) {
                 Object o = l.get(i);
                 if (i == 0) {
-                    sb.append("<td colspan='").append(maxCols).append("'>").append(o == null ? "" : o.toString()).append("</td></tr>");
-                } else if (i == l.size() - 1) {
                     sb.append("<tr><td colspan='").append(maxCols).append("'>").append(o == null ? "" : o.toString()).append("</td>");
+                } else if (i == l.size() - 1) {
+                    sb.append("<td colspan='").append(maxCols).append("'>").append(o == null ? "" : o.toString()).append("</td></tr>");
                 } else {
-                    sb.append("<tr><td  colspan='").append(maxCols).append("'>").append(o == null ? "" : o.toString()).append("</td></tr>");
+                    sb.append("<tr><td colspan='").append(maxCols).append("'>").append(o == null ? "" : o.toString()).append("</td></tr>");
                 }
             }
         } else {
