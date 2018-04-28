@@ -1,7 +1,8 @@
 package com.noob.storage.utils.print.element;
 
-import com.tongbanjie.commons.util.print.TableLocation;
-import org.apache.commons.lang3.StringUtils;
+
+import com.noob.storage.utils.print.TableLocation;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 
