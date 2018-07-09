@@ -35,12 +35,20 @@ public class Position {
      */
     private BigDecimal profit;
 
+
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Position() {
+    }
+
+    public Position(int totalAmount) {
+        this.totalAmount = new BigDecimal(totalAmount);
     }
 
     public BigDecimal getTotalAmount() {

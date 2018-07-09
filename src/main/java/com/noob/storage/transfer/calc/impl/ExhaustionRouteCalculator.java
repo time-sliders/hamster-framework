@@ -3,6 +3,7 @@ package com.noob.storage.transfer.calc.impl;
 import com.noob.storage.transfer.calc.RouteCalculator;
 import com.noob.storage.transfer.model.*;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.util.StopWatch;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,26 +22,75 @@ public class ExhaustionRouteCalculator implements RouteCalculator {
     private Comparator<Position> positionComparator = new PositionComparator();
 
     public static void main(String[] args) {
+        test2(20);
+        i = 0;
+        test2(30);
+        i = 0;
+        test2(40);
+    }
 
+    private static void test1() {
         ExhaustionRouteCalculator calculator = new ExhaustionRouteCalculator();
         RouteCalcReq req = new RouteCalcReq();
         Target target = new Target();
-        target.setRedeemApplyAmount(new BigDecimal(10000));
-        target.setMaturingAmount(new BigDecimal(1000));
-        target.setMinTransferAmount(new BigDecimal(9000));
+        target.setRedeemApplyAmount(new BigDecimal(100));
+        target.setMaturingAmount(new BigDecimal(0));
+        target.setMinTransferAmount(new BigDecimal(100));
         req.setTarget(target);
 
-        List<Position> positions = new ArrayList<>(10000 * 4 / 3 + 1);
-        for (int i = 0; i < 10000; i++) {
-            Position position = new Position();
+        List<Position> positions = new ArrayList<>(7 * 4 / 3 + 1);
+        positions.add(new Position(120));
+        positions.add(new Position(70));
+        positions.add(new Position(60));
+        positions.add(new Position(40));
+        positions.add(new Position(30));
+        positions.add(new Position(8));
+        positions.add(new Position(7));
+        req.setTransferablePositions(positions);
 
-            //position.setTotalAmount();
+        StopWatch sw = new StopWatch();
+        sw.start();
+        RouteCalcResp resp = calculator.calculate(req);
+        for (Position p : resp.getRoute().getRoutePositions()) {
+            System.out.println("Result position: " + p.getTotalAmount());
         }
+        sw.stop();
+        System.out.println("CostTimeMills: " + sw.getTotalTimeMillis() + "ms");
+    }
 
+    /**
+     * o(n) = 2^n - 1
+     * 复杂度太高，不可取
+     */
+    private static void test2(int size) {
+        ExhaustionRouteCalculator calculator = new ExhaustionRouteCalculator();
+        RouteCalcReq req = new RouteCalcReq();
+        Target target = new Target();
+        target.setRedeemApplyAmount(new BigDecimal(size));
+        target.setMaturingAmount(new BigDecimal(0));
+        target.setMinTransferAmount(new BigDecimal(size));
+        req.setTarget(target);
 
+        List<Position> positions = new ArrayList<>(7 * 4 / 3 + 1);
+        for (int i = 0; i < size; i++) {
+            positions.add(new Position(i));
+        }
+        req.setTransferablePositions(positions);
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        RouteCalcResp resp = calculator.calculate(req);
+        for (Position p : resp.getRoute().getRoutePositions()) {
+            System.out.println("Result position: " + p.getTotalAmount());
+        }
+        sw.stop();
+        System.out.println("CostTimeMills: " + sw.getTotalTimeMillis() + "ms");
     }
 
 
+    /**
+     * 最大递归长度 3576
+     */
     @Override
     public RouteCalcResp calculate(RouteCalcReq req) {
 
@@ -76,10 +126,13 @@ public class ExhaustionRouteCalculator implements RouteCalculator {
         return resp;
     }
 
+    private static int i = 0;
+
     private List<Route> getAvailableRouteWithFirstElement(
             List<Position> transferablePositions, BigDecimal matchedAmount,
             BigDecimal redeemApplyAmount) {
 
+        System.out.println(i++);
         if (CollectionUtils.isEmpty(transferablePositions)) {
             return null;
         }
@@ -90,10 +143,12 @@ public class ExhaustionRouteCalculator implements RouteCalculator {
         if (firstPosition.getTotalAmount().compareTo(needMatchAmount) >= 0) {
             routes.add(Route.buildWithSingle(firstPosition));
         } else {
-            needMatchAmount = needMatchAmount.subtract(firstPosition.getTotalAmount());
+            if (transferablePositions.size() == 1) {
+                return null;
+            }
             List<Route> subRoutes = getAvailableRouteWithFirstElement(
                     transferablePositions.subList(1, transferablePositions.size()),
-                    needMatchAmount, redeemApplyAmount);
+                    matchedAmount.add(firstPosition.getTotalAmount()), redeemApplyAmount);
             if (subRoutes == null) {
                 return null;
             }
@@ -105,7 +160,7 @@ public class ExhaustionRouteCalculator implements RouteCalculator {
 
         List<Route> nextRoutes = getAvailableRouteWithFirstElement(
                 transferablePositions.subList(1, transferablePositions.size()),
-                needMatchAmount, redeemApplyAmount);
+                matchedAmount, redeemApplyAmount);
         if (CollectionUtils.isNotEmpty(nextRoutes)) {
             routes.addAll(nextRoutes);
         }
@@ -131,7 +186,7 @@ public class ExhaustionRouteCalculator implements RouteCalculator {
     class PositionComparator implements Comparator<Position> {
         @Override
         public int compare(Position p1, Position p2) {
-            return p1.getTotalAmount().compareTo(p2.getTotalAmount());
+            return p2.getTotalAmount().compareTo(p1.getTotalAmount());
         }
     }
 }
