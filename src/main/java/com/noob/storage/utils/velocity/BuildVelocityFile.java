@@ -21,14 +21,14 @@ public class BuildVelocityFile {
 
     private static final String ip = "192.168.1.16";
     private static final String port = "3306";
-    private static final String schema = "tbj";
+    private static final String schema = "tz_tplan";
     private static final String userName = "tbj";
     private static final String password = "tbj900900";
 
     public static void main(String[] args) {
 
         String[] tables = new String[]{
-                "tbj_member_invest_preference"
+                "advance_transfer_plan","advance_transfer_detail"
         };
 
         for (String tableName : tables) {
@@ -40,7 +40,8 @@ public class BuildVelocityFile {
     private static void buildZipFile(String table) {
         try {
             String beanName = StringUtils.getJavaName(table);
-            Connection connection = DriverManager.getConnection("jdbc:mysql://" + ip + ":" + port + "/" + schema + "?useUnicode=true&characterEncoding=utf-8", userName, password);
+            Connection connection = DriverManager.getConnection("jdbc:mysql://" + ip + ":" + port + "/"
+                    + schema + "?useUnicode=true&characterEncoding=utf-8", userName, password);
             TableConfig tableConfig = getTable(connection, table);
             connection.close();
 

@@ -25,7 +25,8 @@ public class NIOServerEventDispatcher implements Dispatcher<SelectionKey> {
     private static ThreadPoolExecutor tpe;
 
     static {
-        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(), new RejectedExecutionHandler() {
+        tpe = new ThreadPoolExecutor(50, 100, 10, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<Runnable>(), new RejectedExecutionHandler() {
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
                 logger.warn("------------------reject>>>>" + JSON.toJSONString(r));
@@ -37,11 +38,13 @@ public class NIOServerEventDispatcher implements Dispatcher<SelectionKey> {
     @Override
     public void dispatch(SelectionKey sk) {
         if (sk.isAcceptable()) {
-            new ServerAcceptedEventHandler(sk).run();
+            tpe.submit(new ServerAcceptedEventHandler(sk));
         } else if (sk.isReadable()) {
-            new ServerReadEventHandler(sk).run();
+            tpe.submit(new ServerReadEventHandler(sk));
         } else if (sk.isWritable()) {
-            new ServerWriteEventHandler(sk).run();
+            tpe.submit(new ServerWriteEventHandler(sk));
+        } else {
+            logger.info("unknownSelectionKeyType");
         }
 
     }

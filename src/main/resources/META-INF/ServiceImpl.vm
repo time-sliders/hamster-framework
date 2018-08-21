@@ -33,7 +33,12 @@ public class ${table.beanName}ServiceImpl implements ${table.beanName}Service {
 
     @Override
     public int insert(${table.beanName} ${table.injectName}) {
-        return ${table.injectName}DAO.insert(converter.toDto(${table.injectName}));
+        ${table.beanName}DO dataObj = converter.toDto(${table.injectName});
+        int num = ${table.injectName}DAO.insert(dataObj));
+        if (num > 0) {
+            ${table.injectName}.setId(dataObj.getId());
+        }
+        return num;
     }
 
 }

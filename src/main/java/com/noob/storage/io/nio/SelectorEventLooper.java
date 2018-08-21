@@ -23,11 +23,8 @@ public class SelectorEventLooper {
             Iterator<SelectionKey> i = selector.selectedKeys().iterator();
 
             while (i.hasNext()) {
-
                 SelectionKey sk = i.next();
-
                 i.remove();
-
                 if (!sk.isValid()) {
                     continue;
                 }

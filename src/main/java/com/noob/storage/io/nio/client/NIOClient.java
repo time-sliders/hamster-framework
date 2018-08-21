@@ -60,7 +60,7 @@ public class NIOClient {
             SelectorEventLooper.loop(selector, new NIOClientEventDispatcher());
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 

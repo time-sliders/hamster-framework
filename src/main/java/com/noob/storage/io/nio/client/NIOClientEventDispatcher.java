@@ -25,10 +25,11 @@ public class NIOClientEventDispatcher implements Dispatcher<SelectionKey> {
     private static ThreadPoolExecutor tpe;
 
     static {
-        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(), new RejectedExecutionHandler() {
+        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<Runnable>(), new RejectedExecutionHandler() {
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                logger.warn("------------------reject>>>>" + JSON.toJSONString(r));
+                logger.warn("-----nio client rejected >>>>" + JSON.toJSONString(r));
             }
         });
         tpe.allowCoreThreadTimeOut(true);
@@ -37,11 +38,13 @@ public class NIOClientEventDispatcher implements Dispatcher<SelectionKey> {
     @Override
     public void dispatch(SelectionKey sk) {
         if (sk.isConnectable()) {
-            new ClientConnectEventHandler(sk).run();
+            tpe.submit(new ClientConnectEventHandler(sk));
         } else if (sk.isWritable()) {
-            new ClientWriteEventHandler(sk).run();
+            tpe.submit(new ClientWriteEventHandler(sk));
         } else if (sk.isReadable()) {
-            new ClientReadEventHandler(sk).run();
+            tpe.submit(new ClientReadEventHandler(sk));
+        } else {
+            logger.info("unknownSelectionKeyType");
         }
     }
 }

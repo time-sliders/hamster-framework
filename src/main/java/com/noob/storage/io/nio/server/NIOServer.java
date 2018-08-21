@@ -22,9 +22,6 @@ public class NIOServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NIOServer.class);
 
-    /**
-     * 服务器端口
-     */
     private int port;
 
     public NIOServer(int port) {
@@ -49,7 +46,7 @@ public class NIOServer {
             // 2.开启服务端通道
             ServerSocketChannel ssc = ServerSocketChannel.open();
             // 3.绑定服务端通道端口
-            // ssc.bind(new InetSocketAddress(port)); // TODO 低版本不支持，先注释掉
+            ssc.bind(new InetSocketAddress(port));
             // 4.开启非阻塞模式
             ssc.configureBlocking(false);
             // 5.注册通道到选择器
@@ -60,7 +57,7 @@ public class NIOServer {
             // ～～～～～～～～～～～等待客户端连接～～～～～～～～～～～
             SelectorEventLooper.loop(selector, new NIOServerEventDispatcher());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 }
