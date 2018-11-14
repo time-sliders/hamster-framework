@@ -20,11 +20,11 @@ public class GenerateSQL {
         FileInputStream fis = null;
         FileOutputStream fos = null;
         try {
-            File file = new File("/Users/zhangwei/Downloads/1");
+            File file = new File("/Users/zhangwei/Downloads/20180821_error_order_id.txt");
             fis = new FileInputStream(file);
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
 
-            File outFile = new File("/Users/zhangwei/Downloads/transfer_rollback_20180820.sql");
+            File outFile = new File("/Users/zhangwei/Downloads/transfer_rollback_20180821.sql");
             if (outFile.exists() && !outFile.delete()) {
                 throw new RuntimeException("can not delete");
             }
