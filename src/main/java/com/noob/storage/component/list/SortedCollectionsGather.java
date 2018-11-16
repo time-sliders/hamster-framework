@@ -37,6 +37,11 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
     private int gatherMode = GatherMode.DEFAULT;
 
     /**
+     * 是否需要去重
+     */
+    private boolean distinct = false;
+
+    /**
      * 多数据源列表数据聚合
      *
      * @param request 多个数据源公共的查询请求参数
@@ -57,6 +62,8 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
         AtomicBoolean isInterruptByLeastMode = new AtomicBoolean(false);
         // 当某一个数据源当前页数据耗尽时，是否需要查询下一页数据
         boolean needNextPage;
+        // 上一个被 Consume 的数据的 Compare Value (页面显示的上一个数不作处理)
+        C lastConsumeValue = null;
 
         while (true) {
 
@@ -79,11 +86,22 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
                 break;
             }
 
+            // 去重
+            C currentCompareValue = max.getCurrentCompareValue();
+            if (distinct
+                    && lastConsumeValue != null
+                    && isRepeatingValue(lastConsumeValue, currentCompareValue)) {
+                max.consumeCurrentValue();
+                lastConsumeValue = currentCompareValue;
+                continue;
+            }
+
             V v = max.convertCurrentValueToResultModel();
             resultList.add(v);
             isFetchedValidData = true;
 
             max.consumeCurrentValue();
+            lastConsumeValue = currentCompareValue;
 
             if (isFinished(resultList, request)) {
                 break;
@@ -92,6 +110,11 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
 
         return resultList;
     }
+
+    /**
+     * 判断2个值是否重复，这里不直接用 comparator 是因为排序去重可能与业务去重的需求不一致
+     */
+    protected abstract boolean isRepeatingValue(C o1, C o2);
 
     private Comparator<SortedCollectionIterator<?, ?, R, C, V>> comparator =
             new Comparator<SortedCollectionIterator<?, ?, R, C, V>>() {
@@ -118,7 +141,7 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
             };
 
     /**
-     * 是否已经达到目标数据
+     * 是否已经达到结束条件
      *
      * @param resultList 结果列表
      * @param request    请求对象
@@ -138,5 +161,9 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
 
     public void setGatherMode(int gatherMode) {
         this.gatherMode = gatherMode;
+    }
+
+    public void setDistinct(boolean distinct) {
+        this.distinct = distinct;
     }
 }

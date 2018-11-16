@@ -16,6 +16,11 @@ public class TestGather {
     public static void main(String[] args) {
         SortedCollectionsGather<Integer, Integer, Integer> gather = new SortedCollectionsGather<Integer, Integer, Integer>() {
             @Override
+            protected boolean isRepeatingValue(Integer o1, Integer o2) {
+                return o1.equals(o2);
+            }
+
+            @Override
             protected boolean isFinished(List<Integer> resultList, Integer request) {
                 return resultList.size() >= 10;
             }
@@ -32,7 +37,7 @@ public class TestGather {
                             List<Integer> list = new ArrayList<Integer>();
                             list.add(1);
                             list.add(3);
-                            list.add(4);
+                            list.add(5);
                             list.add(6);
                             return list;
                         } else if (idx == 2) {
@@ -48,7 +53,7 @@ public class TestGather {
 
                     @Override
                     protected boolean checkValidation(Integer integer, Integer integer2) {
-                        return integer2 < 7;
+                        return integer2 < 2;
                     }
 
                     @Override
@@ -82,7 +87,7 @@ public class TestGather {
                             List<Integer> list = new ArrayList<Integer>();
                             list.add(2);
                             list.add(5);
-                            list.add(7);
+                            list.add(6);
                             list.add(9);
                             return list;
                         } else if (idx == 2) {
@@ -99,7 +104,7 @@ public class TestGather {
 
                     @Override
                     protected boolean checkValidation(Integer integer, Integer integer2) {
-                        return integer2 < 6;
+                        return integer2 < 3;
                     }
 
                     @Override
@@ -125,10 +130,14 @@ public class TestGather {
         gather.addIterator(i2);
         gather.addIterator(i1);
         gather.setGatherMode(GatherMode.LEAST_QUERY_MODE);
+        gather.setDistinct(true);
 
         List<Integer> list = gather.gather(0);
 
-        System.out.println(list.size());
+        System.out.println(list.size() + ">>>>>>");
+        for (Integer i : list) {
+            System.out.println(i);
+        }
     }
 
 }
