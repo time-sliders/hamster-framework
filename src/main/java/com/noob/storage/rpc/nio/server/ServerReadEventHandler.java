@@ -1,8 +1,8 @@
-package com.noob.storage.io.nio.server;
+package com.noob.storage.rpc.nio.server;
 
 import com.alibaba.dubbo.common.utils.StringUtils;
-import com.noob.storage.io.nio.ChannelUtil;
-import com.noob.storage.io.nio.NIOEventHandler;
+import com.noob.storage.rpc.nio.ChannelUtil;
+import com.noob.storage.rpc.nio.NIOEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,13 +16,9 @@ import java.nio.channels.SocketChannel;
  * @version NIO
  * @since 2017.09.26
  */
-public class ServerReadEventHandler extends NIOEventHandler {
+public class ServerReadEventHandler implements NIOEventHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerReadEventHandler.class);
-
-    public ServerReadEventHandler(SelectionKey selectionKey) {
-        super(selectionKey);
-    }
 
     @Override
     public void handle(SelectionKey selectionKey) {

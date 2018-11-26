@@ -1,7 +1,7 @@
-package com.noob.storage.io.nio.client;
+package com.noob.storage.rpc.nio.client;
 
-import com.noob.storage.io.nio.ChannelUtil;
-import com.noob.storage.io.nio.NIOEventHandler;
+import com.noob.storage.rpc.nio.ChannelUtil;
+import com.noob.storage.rpc.nio.NIOEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,13 +14,9 @@ import java.nio.channels.SocketChannel;
  * @version NIO
  * @since 2017.09.27
  */
-public class ClientReadEventHandler extends NIOEventHandler {
+public class ClientReadEventHandler implements NIOEventHandler {
 
     public static final Logger logger = LoggerFactory.getLogger(ClientReadEventHandler.class);
-
-    public ClientReadEventHandler(SelectionKey selectionKey) {
-        super(selectionKey);
-    }
 
     @Override
     public void handle(SelectionKey selectionKey) {

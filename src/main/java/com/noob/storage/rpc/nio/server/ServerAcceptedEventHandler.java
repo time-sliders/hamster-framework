@@ -1,6 +1,6 @@
-package com.noob.storage.io.nio.server;
+package com.noob.storage.rpc.nio.server;
 
-import com.noob.storage.io.nio.NIOEventHandler;
+import com.noob.storage.rpc.nio.NIOEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,13 +16,9 @@ import java.nio.channels.SocketChannel;
  * @version NIO
  * @since 2017.09.26
  */
-public class ServerAcceptedEventHandler extends NIOEventHandler {
+public class ServerAcceptedEventHandler implements NIOEventHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerAcceptedEventHandler.class);
-
-    public ServerAcceptedEventHandler(SelectionKey selectionKey) {
-        super(selectionKey);
-    }
 
     @Override
     public void handle(SelectionKey selectionKey) {
@@ -33,6 +29,7 @@ public class ServerAcceptedEventHandler extends NIOEventHandler {
             }
             sc.configureBlocking(false);
             sc.register(selectionKey.selector(), SelectionKey.OP_READ);
+            logger.info("服务端收到连接请求");
         } catch (IOException e) {
             logger.warn("客户端连接处理异常", e);
         }

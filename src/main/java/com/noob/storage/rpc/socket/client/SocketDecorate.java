@@ -1,4 +1,4 @@
-package com.noob.storage.socket.client;
+package com.noob.storage.rpc.socket.client;
 
 import com.noob.storage.resource.base.InitAble;
 import org.apache.commons.io.IOUtils;

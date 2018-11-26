@@ -1,11 +1,11 @@
 package com.noob.storage.component.list;
 
+import com.noob.storage.component.list.model.DistinctAndCompareModel;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -13,14 +13,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @param <R> 公共查询请求 Request
  * @param <V> 最终需要转换成的返回数据类型 View/Result Type
- * @param <C> 拿来做排序的字段类型 Compare Value
+ * @param <S> 拿来做排序的字段类型 sort Compare Value
+ * @param <D> 拿来做去重的字段类型 distinct Compare Value
  * @author luyun
  * @see SortedCollectionIterator
  * @since 2018.11.13 16:59
  */
-public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
+public abstract class SortedCollectionsGather<R, V extends DistinctAndCompareModel<S>,
+        S extends Comparable<S>, D extends Comparable<D>> {
 
-    private List<SortedCollectionIterator<?, ?, R, C, V>> iterators = null;
+    private static final Logger logger = LoggerFactory.getLogger(SortedCollectionsGather.class);
+
+    private List<SortedCollectionIterator<?, ?, R, S, D, V>> iterators = null;
 
     /**
      * 排序模式
@@ -39,7 +43,27 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
     /**
      * 是否需要去重
      */
-    private boolean distinct = false;
+    private int distinctMode = DistinctMode.NO_DISTINCT;
+
+    /**
+     * 是否所有数据源数据都耗尽
+     */
+    private boolean isEnd = true;
+
+    /**
+     * 全局去重时，已经获取到的值列表
+     */
+    private Set<D> globalDistinctValueSet = null;
+
+    /**
+     * 最大的需要被保留的去重数据量
+     */
+    private int maxRemainIgnoredDataSize = 0;
+
+    /**
+     * 记录的被去重的数据，记录数据总量不会超过 maxRemainIgnoredDataSize
+     */
+    private List<V> distinctValues = null;
 
     /**
      * 多数据源列表数据聚合
@@ -62,14 +86,14 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
         AtomicBoolean isInterruptByLeastMode = new AtomicBoolean(false);
         // 当某一个数据源当前页数据耗尽时，是否需要查询下一页数据
         boolean needNextPage;
-        // 上一个被 Consume 的数据的 Compare Value (页面显示的上一个数不作处理)
-        C lastConsumeValue = null;
+        // 上一个被 Consume 的数据的 distinct Compare Value (页面显示的上一个数不作处理)
+        D lastDcv = null;
 
         while (true) {
 
             needNextPage = !(isFetchedValidData && isLeastQueryMode);
 
-            for (SortedCollectionIterator<?, ?, R, C, V> i : iterators) {
+            for (SortedCollectionIterator<?, ?, R, S, D, V> i : iterators) {
                 i.dragNext(request, needNextPage, isInterruptByLeastMode);
                 if (isInterruptByLeastMode.get()) {
                     break;
@@ -80,47 +104,95 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
                 break;
             }
 
-            SortedCollectionIterator<?, ?, R, C, V> max
+            SortedCollectionIterator<?, ?, R, S, D, V> max
                     = Collections.max(iterators, comparator);
             if (max == null || max.isEnd()) {
                 break;
             }
 
             // 去重
-            C currentCompareValue = max.getCurrentCompareValue();
-            if (distinct
-                    && lastConsumeValue != null
-                    && isRepeatingValue(lastConsumeValue, currentCompareValue)) {
+            D dcv = max.getCurrentElementDistinctCompareValue();
+            if (distinctMode == DistinctMode.ONLY_LAST_VALUE_DISTINCT
+                    && lastDcv != null
+                    && isLastRepeatingValue(lastDcv, dcv)) {
+                saveDistinctData(max, request);
                 max.consumeCurrentValue();
-                lastConsumeValue = currentCompareValue;
+                lastDcv = dcv;
                 continue;
             }
+            if (distinctMode == DistinctMode.NO_PAGE_GLOBAL_DISTINCT) {
+                if (isGlobalRepeatingValue(dcv)) {
+                    saveDistinctData(max, request);
+                    max.consumeCurrentValue();
+                    continue;
+                } else {
+                    globalDistinctValueSet.add(dcv);
+                }
+            }
 
-            V v = max.convertCurrentValueToResultModel();
-            resultList.add(v);
-            isFetchedValidData = true;
+            V v = null;
+            try {
+                v = max.convertCurrentValueToResultModel(request);
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+            }
 
             max.consumeCurrentValue();
-            lastConsumeValue = currentCompareValue;
+
+            if (v != null) {
+                resultList.add(v);
+                isFetchedValidData = true;
+                lastDcv = dcv;
+            }
 
             if (isFinished(resultList, request)) {
                 break;
             }
         }
 
+        // 查询结束之后的处理 一般用于处理页面状态保持
+        afterFinished(request);
+
         return resultList;
     }
 
-    /**
-     * 判断2个值是否重复，这里不直接用 comparator 是因为排序去重可能与业务去重的需求不一致
-     */
-    protected abstract boolean isRepeatingValue(C o1, C o2);
+    private void saveDistinctData(SortedCollectionIterator<?, ?, R, S, D, V> max, R r) {
+        if (maxRemainIgnoredDataSize <= 0) {
+            return;
+        }
+        if (distinctValues == null) {
+            distinctValues = new ArrayList<V>(maxRemainIgnoredDataSize * 4 / 3 + 1);
+        }
+        if (distinctValues.size() < maxRemainIgnoredDataSize) {
+            distinctValues.add(max.convertCurrentValueToResultModel(r));
+        }
+    }
 
-    private Comparator<SortedCollectionIterator<?, ?, R, C, V>> comparator =
-            new Comparator<SortedCollectionIterator<?, ?, R, C, V>>() {
+    /**
+     * 判断当前元素是否与上一个被消费的元素重复
+     */
+    protected abstract boolean isLastRepeatingValue(D o1, D o2);
+
+    private boolean isGlobalRepeatingValue(D distinctCompareValue) {
+        if (globalDistinctValueSet == null) {
+            globalDistinctValueSet = new HashSet<D>();
+            return false;
+        }
+        return globalDistinctValueSet.contains(distinctCompareValue);
+    }
+
+    private void afterFinished(R request) {
+        for (SortedCollectionIterator<?, ?, R, S, D, V> i : iterators) {
+            isEnd = isEnd && i.isEnd();
+            i.afterFinished(request);
+        }
+    }
+
+    private Comparator<SortedCollectionIterator<?, ?, R, S, ?, V>> comparator =
+            new Comparator<SortedCollectionIterator<?, ?, R, S, ?, V>>() {
                 @Override
-                public int compare(SortedCollectionIterator<?, ?, R, C, V> o1,
-                                   SortedCollectionIterator<?, ?, R, C, V> o2) {
+                public int compare(SortedCollectionIterator<?, ?, R, S, ?, V> o1,
+                                   SortedCollectionIterator<?, ?, R, S, ?, V> o2) {
                     if (o1.isEnd() && o2.isEnd()) {
                         return 0;
                     }
@@ -131,11 +203,11 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
                         return 1;
                     }
                     if (sortMode == SortMode.ASC) {
-                        return o2.getCurrentCompareValue()
-                                .compareTo(o1.getCurrentCompareValue());
+                        return o2.getCurrentElementSortCompareValue()
+                                .compareTo(o1.getCurrentElementSortCompareValue());
                     } else {
-                        return o1.getCurrentCompareValue()
-                                .compareTo(o2.getCurrentCompareValue());
+                        return o1.getCurrentElementSortCompareValue()
+                                .compareTo(o2.getCurrentElementSortCompareValue());
                     }
                 }
             };
@@ -148,9 +220,9 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
      */
     protected abstract boolean isFinished(List<V> resultList, R request);
 
-    public void addIterator(SortedCollectionIterator<?, ?, R, C, V> i) {
+    public void addIterator(SortedCollectionIterator<?, ?, R, S, D, V> i) {
         if (iterators == null) {
-            iterators = new ArrayList<SortedCollectionIterator<?, ?, R, C, V>>();
+            iterators = new ArrayList<SortedCollectionIterator<?, ?, R, S, D, V>>();
         }
         iterators.add(i);
     }
@@ -163,7 +235,19 @@ public abstract class SortedCollectionsGather<R, V, C extends Comparable<C>> {
         this.gatherMode = gatherMode;
     }
 
-    public void setDistinct(boolean distinct) {
-        this.distinct = distinct;
+    public void setDistinctMode(int distinctMode) {
+        this.distinctMode = distinctMode;
+    }
+
+    public void setMaxRemainIgnoredDataSize(int maxRemainIgnoredDataSize) {
+        this.maxRemainIgnoredDataSize = maxRemainIgnoredDataSize;
+    }
+
+    public boolean isEnd() {
+        return isEnd;
+    }
+
+    public List<V> getDistinctValues() {
+        return distinctValues;
     }
 }

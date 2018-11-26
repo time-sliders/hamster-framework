@@ -1,7 +1,7 @@
-package com.noob.storage.io.nio.client;
+package com.noob.storage.rpc.nio.client;
 
 import com.alibaba.fastjson.JSON;
-import com.noob.storage.io.nio.Dispatcher;
+import com.noob.storage.rpc.nio.Dispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,27 +22,14 @@ public class NIOClientEventDispatcher implements Dispatcher<SelectionKey> {
 
     private static final Logger logger = LoggerFactory.getLogger(NIOClientEventDispatcher.class);
 
-    private static ThreadPoolExecutor tpe;
-
-    static {
-        tpe = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS,
-                new LinkedBlockingDeque<Runnable>(), new RejectedExecutionHandler() {
-            @Override
-            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                logger.warn("-----nio client rejected >>>>" + JSON.toJSONString(r));
-            }
-        });
-        tpe.allowCoreThreadTimeOut(true);
-    }
-
     @Override
     public void dispatch(SelectionKey sk) {
         if (sk.isConnectable()) {
-            tpe.submit(new ClientConnectEventHandler(sk));
+            new ClientConnectEventHandler().handle(sk);
         } else if (sk.isWritable()) {
-            tpe.submit(new ClientWriteEventHandler(sk));
+            new ClientWriteEventHandler().handle(sk);
         } else if (sk.isReadable()) {
-            tpe.submit(new ClientReadEventHandler(sk));
+            new ClientReadEventHandler().handle(sk);
         } else {
             logger.info("unknownSelectionKeyType");
         }

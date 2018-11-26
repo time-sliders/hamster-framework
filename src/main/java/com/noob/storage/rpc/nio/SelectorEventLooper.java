@@ -1,4 +1,4 @@
-package com.noob.storage.io.nio;
+package com.noob.storage.rpc.nio;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -14,21 +14,18 @@ public class SelectorEventLooper {
 
     public static void loop(Selector selector, Dispatcher<SelectionKey> dispatcher) throws IOException {
 
+        //noinspection InfiniteLoopStatement
         while (true) {
-
             if (selector.select() <= 0) {
                 continue;
             }
-
             Iterator<SelectionKey> i = selector.selectedKeys().iterator();
-
             while (i.hasNext()) {
                 SelectionKey sk = i.next();
                 i.remove();
                 if (!sk.isValid()) {
                     continue;
                 }
-
                 dispatcher.dispatch(sk);
             }
         }

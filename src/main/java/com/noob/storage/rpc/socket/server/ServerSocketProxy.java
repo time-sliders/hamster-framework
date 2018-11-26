@@ -1,4 +1,4 @@
-package com.noob.storage.socket.server;
+package com.noob.storage.rpc.socket.server;
 
 import org.apache.log4j.Logger;
 

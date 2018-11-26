@@ -1,4 +1,4 @@
-package com.noob.storage.io.nio.netty.handler;
+package com.noob.storage.rpc.netty;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

@@ -1,6 +1,6 @@
-package com.noob.storage.io.nio.client;
+package com.noob.storage.rpc.nio.client;
 
-import com.noob.storage.io.nio.SelectorEventLooper;
+import com.noob.storage.rpc.nio.SelectorEventLooper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

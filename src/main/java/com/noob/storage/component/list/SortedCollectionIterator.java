@@ -1,5 +1,6 @@
 package com.noob.storage.component.list;
 
+import com.noob.storage.component.list.model.DistinctAndCompareModel;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.Iterator;
@@ -12,13 +13,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <E> 当前集合处理的数据类型 Element
  * @param <Q> 私有的查询参数 Query
  * @param <R> 公共查询请求 Request
- * @param <C> 拿来做排序的字段类型 Compare Value
+ * @param <S> 拿来做排序的字段类型 sort Compare Value
+ * @param <D> 拿来做去重的字段类型 distinct Compare Value
  * @param <V> 最终需要转换成的返回数据类型 View/Result Type
  * @author luyun
  * @see SortedCollectionsGather
  * @since 2018.11.13 17:00
  */
-public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>, V> {
+public abstract class SortedCollectionIterator<E, Q, R,
+        S extends Comparable<S>, D extends Comparable<D>, V extends DistinctAndCompareModel<S>> {
 
     /**
      * 当前数据源数据是否耗尽
@@ -43,7 +46,7 @@ public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>,
     /**
      * 最后一次被消费的元素
      */
-    private E lastConsumedElement;
+    protected E lastConsumedElement;
 
     /**
      * 私有查询参数
@@ -51,14 +54,9 @@ public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>,
     private Q privateQuery;
 
     /**
-     * 当排序值存在大量重复值的时候，需要进行已显示数据的过滤操作
-     */
-    private boolean isFirstIgnoreChecked = false;
-
-    /**
      * 获取数据源数据
      */
-    protected abstract List<E> query(Q query);
+    protected abstract List<E> query(Q query, R request);
 
     /**
      * 获取下一个数据到 currentElement
@@ -79,40 +77,42 @@ public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>,
             return;
         }
 
-        /*
-         * 如果内存 buffer 没有数据，则构建数据库下一页的查询参数
-         * 并查询下一页的数据
-         */
+        boolean isFindValidData = false;
+
+        //noinspection ConditionalBreakInInfiniteLoop
         while (true) {
+
             if (privateQuery == null) {
                 privateQuery = initPrivateQueryParam(r);
             } else {
                 buildNextPageQueryParam(privateQuery, bufferList);
             }
-            bufferList = query(privateQuery);
+
+            bufferList = query(privateQuery, r);
             if (CollectionUtils.isEmpty(bufferList)) {
+                bufferIterator = null;
                 isEnd = true;
                 return;
             }
 
             bufferIterator = bufferList.iterator();
-            if (isFirstIgnoreChecked) {
-                currentElement = bufferIterator.next();
+            currentElement = bufferIterator.next();
+
+            while (true) {
+
+                if (isValidData(r, currentElement)) {
+                    isFindValidData = true;
+                    break;
+                }
+
+                if (bufferIterator.hasNext()) {
+                    currentElement = bufferIterator.next();
+                    continue;
+                }
                 break;
             }
 
-            while (true) {
-                if (!bufferIterator.hasNext()) {
-                    break;
-                }
-                currentElement = bufferIterator.next();
-                if (checkValidation(r, currentElement)) {
-                    continue;
-                }
-                isFirstIgnoreChecked = true;
-                break;
-            }
-            if (isFirstIgnoreChecked) {
+            if (isFindValidData) {
                 break;
             }
         }
@@ -130,12 +130,25 @@ public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>,
      * 指定数据是否已经在页面显示过了
      * 如果已经显示过了，则直接忽略掉，不再显示
      */
-    protected abstract boolean checkValidation(R r, E e);
+    protected abstract boolean isValidData(R r, E e);
 
     /**
      * 获取 currentElement 的排序比较值
      */
-    public abstract C getCurrentCompareValue();
+    public S getCurrentElementSortCompareValue() {
+        return getSortCompareValue(currentElement);
+    }
+
+    public abstract S getSortCompareValue(E e);
+
+    public abstract String getDistinctId(E e);
+
+    public abstract int getDistinctSource();
+
+    /**
+     * 获取currentElement 的去重比较值
+     */
+    public abstract D getCurrentElementDistinctCompareValue();
 
     /**
      * 构建初始化查询参数
@@ -154,7 +167,18 @@ public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>,
     /**
      * 将 currentElement 转换为最终需要返回出去的 VO
      */
-    public abstract V convertCurrentValueToResultModel();
+    protected abstract V convertToResultModel(R r, E e);
+
+    /**
+     * 将 currentElement 转换为最终需要返回出去的 VO
+     */
+    V convertCurrentValueToResultModel(R r) {
+        V v = convertToResultModel(r, currentElement);
+        v.setDistinctId(getDistinctId(currentElement));
+        v.setDistinctSource(getDistinctSource());
+        v.setSortCompareValue(getSortCompareValue(currentElement));
+        return v;
+    }
 
     /**
      * 当前数据源是否耗尽
@@ -163,11 +187,5 @@ public abstract class SortedCollectionIterator<E, Q, R, C extends Comparable<C>,
         return isEnd;
     }
 
-    /**
-     * 获取当前 Iterator 最近一次被消费的元素
-     * 主要用于前段做页面状态保持
-     */
-    public E getLastConsumedElement() {
-        return lastConsumedElement;
-    }
+    public abstract void afterFinished(R request);
 }

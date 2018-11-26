@@ -1,4 +1,4 @@
-package com.noob.storage.io.nio;
+package com.noob.storage.rpc.nio;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
