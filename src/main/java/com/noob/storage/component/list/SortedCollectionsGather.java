@@ -171,7 +171,7 @@ public abstract class SortedCollectionsGather<R, V extends DistinctAndCompareMod
     /**
      * 判断当前元素是否与上一个被消费的元素重复
      */
-    protected abstract boolean isLastRepeatingValue(D o1, D o2);
+    abstract boolean isLastRepeatingValue(D o1, D o2);
 
     private boolean isGlobalRepeatingValue(D distinctCompareValue) {
         if (globalDistinctValueSet == null) {

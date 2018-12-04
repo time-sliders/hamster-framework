@@ -23,8 +23,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class SortedCollectionIterator<E, Q, R,
         S extends Comparable<S>, D extends Comparable<D>, V extends DistinctAndCompareModel<S>> {
 
+    private static final int DEFAULT_MAX_EMPTY_LOOP_COUNT = 25;
+
     /**
-     * 当前数据源数据是否耗尽
+     * 是否数据源的所有数据都已经被查出来了
+     */
+    private boolean isAllDataQueried = false;
+
+    /**
+     * 当前数据源数据是否全部被处理过了
      */
     private boolean isEnd;
 
@@ -32,6 +39,11 @@ public abstract class SortedCollectionIterator<E, Q, R,
      * 内存临时的，有序的，数据缓冲列表
      */
     private List<E> bufferList;
+
+    /**
+     * 最大轮空次数
+     */
+    private int maxEmptyLoopCount = DEFAULT_MAX_EMPTY_LOOP_COUNT;
 
     /**
      * Iterator of bufferList
@@ -72,20 +84,28 @@ public abstract class SortedCollectionIterator<E, Q, R,
             return;
         }
 
-        if (!needNextPage) {
-            isInterruptByLeastMode.set(true);
-            return;
-        }
-
         boolean isFindValidData = false;
+        int emptyLoopCount = 0; //轮空次数
+        int lastQueryCount = 0; //上一次查询到的数据总量
 
-        //noinspection ConditionalBreakInInfiniteLoop
         while (true) {
 
             if (privateQuery == null) {
                 privateQuery = initPrivateQueryParam(r);
             } else {
-                buildNextPageQueryParam(privateQuery, bufferList);
+                if (isAllDataQueried) {
+                    isEnd = true;
+                    return;
+                }
+                if (!buildNextPageQueryParam(r, privateQuery, bufferList, emptyLoopCount)) {
+                    isEnd = true;
+                    return;
+                }
+
+                if (!needNextPage) {
+                    isInterruptByLeastMode.set(true);
+                    return;
+                }
             }
 
             bufferList = query(privateQuery, r);
@@ -95,6 +115,27 @@ public abstract class SortedCollectionIterator<E, Q, R,
                 return;
             }
 
+            if (privateQuery != null
+                    && isAllDataQueried(privateQuery, bufferList)) {
+                isAllDataQueried = true;
+            }
+
+            /*
+             * 这里是为了避免查询过多的数据到 Mem 导致 OOM
+             * 这一机制可能会导致数据不能被查尽！
+             */
+            if (emptyLoopCount > maxEmptyLoopCount) {
+                isEnd = true;
+                return;
+            }
+
+            if (emptyLoopCount > 0
+                    && bufferList.size() == lastQueryCount) {
+                isEnd = true;
+                return;
+            }
+
+            lastQueryCount = bufferList.size();
             bufferIterator = bufferList.iterator();
             currentElement = bufferIterator.next();
 
@@ -115,8 +156,18 @@ public abstract class SortedCollectionIterator<E, Q, R,
             if (isFindValidData) {
                 break;
             }
+            emptyLoopCount++;
         }
     }
+
+    /**
+     * 根据上一次查询的数据列表 以及 上一次的查询参数 判断数据源是否已经耗尽
+     *
+     * @param privateQuery 上一次的查询参数
+     * @param bufferList   上一次查询的数据列表
+     * @return true if All data is queried
+     */
+    protected abstract boolean isAllDataQueried(Q privateQuery, List<E> bufferList);
 
     /**
      * 消费掉 currentElement 位置的元素
@@ -135,7 +186,7 @@ public abstract class SortedCollectionIterator<E, Q, R,
     /**
      * 获取 currentElement 的排序比较值
      */
-    public S getCurrentElementSortCompareValue() {
+    S getCurrentElementSortCompareValue() {
         return getSortCompareValue(currentElement);
     }
 
@@ -160,9 +211,12 @@ public abstract class SortedCollectionIterator<E, Q, R,
      *
      * @param prePageQueryParam 上一页的查询参数
      * @param prePageDataList   上一页的数据
+     * @param emptyLoopCount    轮空次数
+     * @return 是否有必要查询下一页
      */
-    protected abstract void buildNextPageQueryParam(
-            Q prePageQueryParam, List<E> prePageDataList);
+    protected abstract boolean buildNextPageQueryParam(
+            R r, Q prePageQueryParam, List<E> prePageDataList,
+            int emptyLoopCount);
 
     /**
      * 将 currentElement 转换为最终需要返回出去的 VO
@@ -188,4 +242,11 @@ public abstract class SortedCollectionIterator<E, Q, R,
     }
 
     public abstract void afterFinished(R request);
+
+    public void setMaxEmptyLoopCount(int maxEmptyLoopCount) {
+        if (maxEmptyLoopCount <= 0) {
+            throw new IllegalArgumentException("invalid value, must bigger than 0");
+        }
+        this.maxEmptyLoopCount = maxEmptyLoopCount;
+    }
 }
