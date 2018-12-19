@@ -23,8 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class SortedCollectionIterator<E, Q, R,
         S extends Comparable<S>, D extends Comparable<D>, V extends DistinctAndCompareModel<S>> {
 
-    private static final int DEFAULT_MAX_EMPTY_LOOP_COUNT = 25;
-
     /**
      * 是否数据源的所有数据都已经被查出来了
      */
@@ -39,11 +37,6 @@ public abstract class SortedCollectionIterator<E, Q, R,
      * 内存临时的，有序的，数据缓冲列表
      */
     private List<E> bufferList;
-
-    /**
-     * 最大轮空次数
-     */
-    private int maxEmptyLoopCount = DEFAULT_MAX_EMPTY_LOOP_COUNT;
 
     /**
      * Iterator of bufferList
@@ -88,6 +81,7 @@ public abstract class SortedCollectionIterator<E, Q, R,
         int emptyLoopCount = 0; //轮空次数
         int lastQueryCount = 0; //上一次查询到的数据总量
 
+        //noinspection ConditionalBreakInInfiniteLoop
         while (true) {
 
             if (privateQuery == null) {
@@ -124,7 +118,7 @@ public abstract class SortedCollectionIterator<E, Q, R,
              * 这里是为了避免查询过多的数据到 Mem 导致 OOM
              * 这一机制可能会导致数据不能被查尽！
              */
-            if (emptyLoopCount > maxEmptyLoopCount) {
+            if (emptyLoopCount > 25) {
                 isEnd = true;
                 return;
             }
@@ -242,11 +236,4 @@ public abstract class SortedCollectionIterator<E, Q, R,
     }
 
     public abstract void afterFinished(R request);
-
-    public void setMaxEmptyLoopCount(int maxEmptyLoopCount) {
-        if (maxEmptyLoopCount <= 0) {
-            throw new IllegalArgumentException("invalid value, must bigger than 0");
-        }
-        this.maxEmptyLoopCount = maxEmptyLoopCount;
-    }
 }
