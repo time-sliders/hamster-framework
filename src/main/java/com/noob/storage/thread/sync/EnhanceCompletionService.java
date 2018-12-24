@@ -12,21 +12,35 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * 增强完成服务<br/>
  * {@link ExecutorCompletionService} 的一个抽象增强服务。
- * <p>
- * {@link ExecutorCompletionService} 是一个支持提交一批任务到{@link Executor}中，从而可以以多线程的方式处理这一批任务，
+ * <p><br/>
+ * jdk自带的{@link ExecutorCompletionService} 是一个支持提交一批任务到{@link Executor}中，从而可以以多线程的方式处理这一批任务，
  * 提供一个{@link ExecutorCompletionService#take()}方法，可以从多线程执行的结果队列里边，取出已经执行完毕的结果，
  * 并对结果做处理。这样一种多个线程处理数据，并由一个线程消费结果数据的方式，可以提升批量任务处理时的性能。
- * <p>
+ * <p><br/>
  * {@link EnhanceCompletionService} 是对 {@link ExecutorCompletionService}的一个抽象增强，
  * 主要针对一些系统JOB遍历处理表数据时，可以通用的一个多线程模式。该服务需要在创建时指定一个用来多线程处理任务的{@link ThreadPoolExecutor}，
  * 所有提交到该服务的任务将在该线程池中并发执行。
- * <p>
+ * <p><br/>
  * 需要定义一个{@link AbstractTaskProvider}的实现类，用于查询数据库中的数据并通过{@link EnhanceCompletionService#submit(Callable)}
  * 方法提交。
  * <p>
  * 需要定义一个{@link AbstractResultConsumer}的实现类，用于从结果队列中查询业务数据的处理结果，并对结果做汇总合并，该实现类是单线程处理，
  * 所以不需要担心并发消费的问题。
  * <p>
+ * <pre>
+ * .----------------------------------------------------------------------------------------.
+ * |                             EnhanceCompletionService                                   |
+ * .----------------------------------------------------------------------------------------.
+ * |                         ThreadPoolExecutor                                             |
+ * |                         .---------------.                                              |
+ * |                     ->  |   Thread_01   | -> V    Result_Queue                         |
+ * |    .------------.       .---------------.         .-----------.     .--------------.   |
+ * ---> |TaskProvider|   ->  |   Thread_02   | -> V -> | V | V | V |  -> |ResultConsumer| ---> S
+ * |    .------------.       .---------------.         .-----------.     .--------------.   |
+ * |                     ->  |   Thread_03   | -> V                                         |
+ * |                         .---------------.                                              |
+ * .----------------------------------------------------------------------------------------.
+ * </pre>
  * <p>
  * 使用方式:<br/>
  * <pre>
@@ -86,6 +100,20 @@ public class EnhanceCompletionService<V, S> {
     private AbstractResultConsumer<V, S> resultConsumer;
 
     public EnhanceCompletionService(Executor executor, AbstractResultConsumer<V, S> resultConsumer) {
+        // 内置默认的拒绝策略，避免漏任务
+        if (executor instanceof ThreadPoolExecutor) {
+            ((ThreadPoolExecutor) executor).setRejectedExecutionHandler(
+                    new RejectedExecutionHandler() {
+                        @Override
+                        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+                            try {
+                                executor.getQueue().put(r);
+                            } catch (InterruptedException e) {
+                                logger.error(e.getMessage(), e);
+                            }
+                        }
+                    });
+        }
         this.ecs = new ExecutorCompletionService<V>(executor, new LinkedBlockingDeque<Future<V>>());
         this.resultConsumer = resultConsumer;
     }
@@ -119,19 +147,19 @@ public class EnhanceCompletionService<V, S> {
              */
             taskProvider.offerTasks();
 
-            isAllTaskSubmitted.compareAndSet(false, true);
-
-            notifyFutureConsumerThread();
-
-            /*
-             * 等待结果消费线程被回收
-             */
-            futureConsumerThread.join();
-
         } catch (Throwable e) {
             logger.error("-EnhanceCompletionService执行任务异常", e);
         } finally {
+            isAllTaskSubmitted.compareAndSet(false, true);
             notifyFutureConsumerThread();
+            /*
+             * 等待结果消费线程被回收
+             */
+            try {
+                futureConsumerThread.join();
+            } catch (InterruptedException e) {
+                logger.warn("-EnhanceCompletionService执行任务异常", e);
+            }
         }
 
         return resultConsumer.getResult();
@@ -156,30 +184,20 @@ public class EnhanceCompletionService<V, S> {
 
         private AbstractResultConsumer<V, S> resultHandler;
 
-        public CompletionQueueConsumerTask(AbstractResultConsumer<V, S> resultHandler) {
+        CompletionQueueConsumerTask(AbstractResultConsumer<V, S> resultHandler) {
             this.resultHandler = resultHandler;
         }
 
         @Override
         public void run() {
 
+            //noinspection ConditionalBreakInInfiniteLoop
             while (true) {
 
                 if (isAllTaskSubmitted.get() && dealingTaskCount.get() <= 0) {
                     break;
                 }
 
-                /*
-                 * 1.第一个任务提交过慢问题:
-                 * 消费任务是在最先启动的,该任务只会在任务开始提交或者任务已经全
-                 * 部提交完毕之后开始正式消费
-                 *
-                 * 2.最后一个任务过快执行问题:
-                 * 假设:最后一个任务提交完之后,结果被很快消费处理完
-                 * isAllTaskSubmitted 字段在 CompletionQueueConsumerTask 进入下
-                 * 一次while循环判断的时候,甚至还没来的及置为 true
-                 * 就会导致CompletionQueueConsumerTask 一直等待在take方法,从而死锁在这
-                 */
                 lock.lock();
                 try {
                     if (!isAllTaskSubmitted.get() && dealingTaskCount.get() <= 0) {
@@ -194,17 +212,13 @@ public class EnhanceCompletionService<V, S> {
                 int count = dealingTaskCount.get();
 
                 for (int i = 0; i < count; i++) {
-
                     try {
-
                         V v = ecs.take().get();
-
-                        dealingTaskCount.decrementAndGet();
-
                         resultHandler.consume(v);
-
                     } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
+                    } finally {
+                        dealingTaskCount.decrementAndGet();
                     }
                 }
 
