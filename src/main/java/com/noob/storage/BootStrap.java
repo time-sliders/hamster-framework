@@ -11,26 +11,23 @@ import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-/**
- * @author luyun
- * @version 1.0
- * @since 2017.12.29
- */
 public class BootStrap {
 
     private static final Logger logger = LoggerFactory.getLogger(BootStrap.class);
 
     public static void main(String[] args) {
+
         System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "/Users/zhangwei/Downloads/cglib/");
         FileSystemXmlApplicationContext ac = new FileSystemXmlApplicationContext("classpath:spring/spring-context.xml");
         envCheck(ac);
-        UserManagerComponent userManagerComponent = null;
-        UserInfoService userInfoService  = null;
+        UserManagerComponent userManagerComponent;
+        UserInfoService userInfoService;
 
         try {
             userManagerComponent = ac.getBean("userManagerComponent", UserManagerComponent.class);
             userManagerComponent.noTransaction();
             System.out.println();
+
         } catch (Throwable e) {
             logger.info(e.getMessage(), e);
         }
@@ -41,13 +38,15 @@ public class BootStrap {
             userInfoService = ac.getBean("userInfoServiceImpl", UserInfoService.class);
             userInfoService.noTransaction();
             System.out.println();
+
         } catch (Throwable e) {
             logger.info(e.getMessage(), e);
         }
+
         envCheck(ac);
+
         System.out.println();
     }
-
 
     private static void envCheck(ApplicationContext ac) {
         RedisComponent redisComponent = null;
@@ -58,12 +57,13 @@ public class BootStrap {
             redisComponent = ac.getBean("redisComponent", RedisComponent.class);
             isLocked = redisComponent.acquireLock(lockKey, Millisecond.TEN_MINUS);
             System.out.println("redisComponent:check_result>" + isLocked);
-
             UserInfoService userInfoService = (UserInfoService) ac.getBean("userInfoServiceImpl");
             UserInfo userInfo = userInfoService.findById(1L);
             System.out.println("mysql_select:check_result>" + userInfo.getName());
+
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
+
         } finally {
             if (isLocked) {
                 redisComponent.releaseLock(lockKey);
