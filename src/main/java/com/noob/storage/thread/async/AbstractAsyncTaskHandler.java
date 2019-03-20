@@ -3,8 +3,6 @@ package com.noob.storage.thread.async;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,8 +36,7 @@ public abstract class AbstractAsyncTaskHandler<T> implements InitializingBean {
      *
      * @param t 业务数据
      */
-    @Transactional(propagation = Propagation.NEVER)
-    public final void submitToAsyncPool(T t) {
+    public void submitToAsyncPool(T t) {
         tpe.submit(new AsyncHandleTask(t));
     }
 
