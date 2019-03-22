@@ -1,4 +1,4 @@
-package com.noob.storage.rpc.netty;
+package com.noob.storage.rpc.netty.echo;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -22,7 +22,7 @@ public class EchoClient {
     public static void main(String[] args) throws Exception {
         String host = "127.0.0.1";
         int port = 8080;
-        new EchoClient(host,port).start();
+        new EchoClient(host, port).start();
     }
 
     public void start() throws Exception {

@@ -1,4 +1,4 @@
-package com.noob.storage.rpc.netty;
+package com.noob.storage.rpc.netty.echo;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -47,4 +47,5 @@ public class EchoServer {
             group.shutdownGracefully().sync();
         }
     }
+
 }
