@@ -1,6 +1,5 @@
 package com.noob.storage.rpc.socket.client;
 
-import com.noob.storage.resource.base.InitAble;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -15,7 +14,7 @@ import java.net.SocketAddress;
  * 客户端socket封装
  * 对socket进行封装，主要作用是对socket输入输出流进行封装,便于报文通行
  */
-public class SocketDecorate extends Socket implements InitAble {
+public class SocketDecorate extends Socket {
 
     private static final Logger log = LoggerFactory.getLogger(SocketDecorate.class);
 

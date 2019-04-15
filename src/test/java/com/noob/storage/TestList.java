@@ -19,7 +19,7 @@ public class TestList {
 
 
     @Test
-    public void testArrayList() {
+    public synchronized void testArrayList() {
         StopWatch sw = new StopWatch();
         List<String> list001 = new ArrayList<String>();
         sw.start();
