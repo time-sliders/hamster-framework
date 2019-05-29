@@ -8,6 +8,7 @@ public class Target {
 
     public void A() {
         System.out.println("Target.A() invoked");
+        B();
     }
 
     @Transactional

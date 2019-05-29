@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
  * @since 2019.05.22
  */
 public class Interceptor implements MethodInterceptor {
+
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
         System.out.println("I am intercept begin");

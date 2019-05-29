@@ -5,7 +5,6 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 public class BootStrap {
 
-
     public static void main(String[] args) {
         FileSystemXmlApplicationContext ac = new FileSystemXmlApplicationContext("classpath:spring/spring-context.xml");
         TestJDBCTransactional.testJDBCTrans();

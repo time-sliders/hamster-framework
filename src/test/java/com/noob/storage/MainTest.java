@@ -1,3 +1,5 @@
+package com.noob.storage;
+
 import com.alibaba.fastjson.JSON;
 
 import java.math.BigDecimal;
