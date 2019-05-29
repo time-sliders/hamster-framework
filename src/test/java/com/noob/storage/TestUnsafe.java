@@ -23,8 +23,3 @@ public class TestUnsafe {
     }
 }
 
-class Person {
-
-    public static String NAME = "doge";
-    public String age;
-}

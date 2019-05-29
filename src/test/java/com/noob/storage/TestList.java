@@ -17,6 +17,10 @@ public class TestList {
     private static final String S = "Ssssss";
     private static final int dataSize = 750;
 
+    public static void main(String[] args) {
+        System.out.println( 1<< 7);
+    }
+
 
     @Test
     public synchronized void testArrayList() {
