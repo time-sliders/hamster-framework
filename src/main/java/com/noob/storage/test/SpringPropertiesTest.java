@@ -1,4 +1,4 @@
-package com.noob.storage.business;
+package com.noob.storage.test;
 
 import com.noob.storage.business.properties.PropertiesHolder;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
