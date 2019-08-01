@@ -1,7 +1,7 @@
-package com.noob.storage.rpc.nio.client;
+package com.noob.storage.io.nio.client;
 
-import com.noob.storage.rpc.nio.ChannelUtil;
-import com.noob.storage.rpc.nio.NIOEventHandler;
+import com.noob.storage.io.nio.ChannelUtil;
+import com.noob.storage.io.nio.NIOEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
