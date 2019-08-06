@@ -1,6 +1,5 @@
 package com.noob.storage.io.nio.client;
 
-import com.noob.storage.io.nio.SelectorEventLooper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +17,9 @@ import java.nio.channels.spi.SelectorProvider;
  * @version NIO
  * @since 2017.09.26
  */
-public class NIOClient {
+public class Client {
 
-    private static final Logger logger = LoggerFactory.getLogger(NIOClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     /**
      * 服务器IP地址
@@ -34,13 +33,13 @@ public class NIOClient {
 
     private Selector selector;
 
-    public NIOClient(String serverIp, int port) {
+    public Client(String serverIp, int port) {
         this.serverIp = serverIp;
         this.port = port;
     }
 
     public static void main(String[] args) {
-        NIOClient nioClient = new NIOClient("localhost", 8888);
+        Client nioClient = new Client("localhost", 8888);
         nioClient.init();
     }
 
@@ -52,12 +51,11 @@ public class NIOClient {
             // 1.开启客户端选择器
             selector = SelectorProvider.provider().openSelector();
 
-            logger.info("NIOClient init success @ " + serverIp + ":" + port);
+            logger.info("Client init success @ " + serverIp + ":" + port);
 
             register();
 
             // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
-            SelectorEventLooper.loop(selector, new NIOClientEventDispatcher());
 
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
