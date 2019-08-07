@@ -1,14 +1,18 @@
 package com.noob.storage.io.nio.client;
 
+import com.noob.storage.io.nio.server.AbstractSelectorLoop;
+import com.noob.storage.io.nio.server.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.Iterator;
 
 /**
  * NIO 客户端
@@ -17,65 +21,19 @@ import java.nio.channels.spi.SelectorProvider;
  * @version NIO
  * @since 2017.09.26
  */
-public class Client {
+public class Client extends AbstractSelectorLoop {
 
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
-
-    /**
-     * 服务器IP地址
-     */
-    private String serverIp;
-
-    /**
-     * 服务器端口
-     */
-    private int port;
-
-    private Selector selector;
-
-    public Client(String serverIp, int port) {
-        this.serverIp = serverIp;
-        this.port = port;
+    public static void main(String[] args) throws IOException {
+        new Client().runClient();
     }
 
-    public static void main(String[] args) {
-        Client nioClient = new Client("localhost", 8888);
-        nioClient.init();
+    public void runClient() throws IOException {
+        Selector selector = SelectorProvider.provider().openSelector();
+        SocketChannel sc = SocketChannel.open();
+        sc.configureBlocking(false);
+        sc.connect(new InetSocketAddress("localhost", 8888));
+        sc.register(selector, SelectionKey.OP_CONNECT, new ConnectedHandler());
+        loopSelector(selector);
     }
-
-    public void init() {
-        try {
-
-            // ～～～～～～～～～～～客户端初始化～～～～～～～～～～～
-
-            // 1.开启客户端选择器
-            selector = SelectorProvider.provider().openSelector();
-
-            logger.info("Client init success @ " + serverIp + ":" + port);
-
-            register();
-
-            // ～～～～～～～～～～～客户端业务处理～～～～～～～～～～
-
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    private void register() {
-        try {
-            // 2.开启客户端channel
-            SocketChannel sc = SocketChannel.open();
-            // 4.设置非模式
-            sc.configureBlocking(false);
-            // 3.绑定服务端地址
-            sc.connect(new InetSocketAddress(serverIp, port));
-            // 5.注册到选择器
-            sc.register(selector, SelectionKey.OP_CONNECT);
-        } catch (IOException e) {
-            logger.warn(e.getMessage(), e);
-        }
-    }
-
 
 }

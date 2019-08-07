@@ -1,9 +1,9 @@
 package com.noob.storage.io.nio.server;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 
 /**
@@ -13,23 +13,18 @@ import java.nio.channels.ServerSocketChannel;
  * @version NIO
  * @since 2017.09.26
  */
-public class Server {
+public class Server extends AbstractSelectorLoop {
 
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
-
-    private ServerSocketChannel ssc;
-
-    public Server(int port, int backlog, boolean blocking) throws Exception {
-        ssc = ServerSocketChannel.open();
-        ssc.socket().setReuseAddress(true);
-        ssc.socket().bind(new InetSocketAddress(port), backlog);
-        ssc.configureBlocking(blocking);
+    public static void main(String[] args) throws IOException {
+        new Server().runServer();
     }
 
-    public void runServer() throws Exception {
-        DispatcherN dispatcherN = new DispatcherN();
-        Acceptor acceptor = new Acceptor(ssc, dispatcherN);
-        new Thread(acceptor).start();
-        dispatcherN.run();
+    public void runServer() throws IOException {
+        Selector selector = Selector.open();
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        ssc.bind(new InetSocketAddress(8888));
+        ssc.configureBlocking(false);
+        ssc.register(selector, SelectionKey.OP_ACCEPT, new AcceptHandler());
+        loopSelector(selector);
     }
 }
