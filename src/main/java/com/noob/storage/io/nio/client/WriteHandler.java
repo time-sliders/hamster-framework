@@ -13,16 +13,35 @@ import java.nio.channels.SocketChannel;
  * @since 2019.08.07
  */
 public class WriteHandler implements Handler {
+
     @Override
     public void handle(SelectionKey sk) throws IOException {
         SocketChannel c = (SocketChannel) sk.channel();
-        String msg = "Hello Server";
         ByteBuffer buffer = ByteBuffer.allocate(1024);
-        buffer.put(msg.getBytes());
-        buffer.flip();
-        c.write(buffer);
+
+        // TODO channel 复用
+        sendMsg("Zhang Wei",buffer,c);
+        sendMsg("Huang Shan Shan",buffer,c);
+        sendMsg("Huang Shan Shan1",buffer,c);
+        sendMsg("Huang Shan Shan23",buffer,c);
+        sendMsg("Huang Shan Shan424",buffer,c);
+        sendMsg("Huang Shan Shan12",buffer,c);
+        sendMsg("111Huang Shan Shan",buffer,c);
+        sendMsg("Huang 222 Shan Shan",buffer,c);
+
         c.close();
         sk.cancel();
         System.out.println("client write msg");
+    }
+
+    private void sendMsg(String msg, ByteBuffer buffer, SocketChannel c) throws IOException {
+        // TODO 消息编码
+        byte[] msgB = msg.getBytes();
+        int bodyLength = msgB.length;
+        buffer.putLong(bodyLength);
+        buffer.put(msgB);// TODO 序列化技术
+        buffer.flip();
+        c.write(buffer);
+        buffer.clear();
     }
 }

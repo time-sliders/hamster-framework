@@ -12,7 +12,7 @@ import java.util.Iterator;
  */
 public class AbstractSelectorLoop {
 
-    protected void loopSelector(Selector selector){
+    protected void loopSelector(Selector selector) {
         for (; ; ) {
             try {
                 selector.select();

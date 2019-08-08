@@ -7,19 +7,21 @@ import java.nio.channels.SocketChannel;
 
 /**
  * @author 卢云(luyun)
- * @version app 7.8.3
  * @since 2019.08.07
  */
 public class ReadHandler implements Handler {
+
     @Override
     public void handle(SelectionKey sk) {
         try {
             SocketChannel sc = (SocketChannel) sk.channel();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
-            int read = sc.read(buffer); // TODO decode
-            System.out.println(read);
+            sc.read(buffer);
             buffer.flip();
-            System.out.println(new String(buffer.array(), 0, read));
+            while (buffer.hasRemaining()) {
+                receiveMsg(buffer);
+            }
+            buffer.clear();
             sc.close();
             sk.cancel();
         } catch (IOException e) {
@@ -27,4 +29,12 @@ public class ReadHandler implements Handler {
         }
     }
 
+    public void receiveMsg(ByteBuffer buffer) {
+        // TODO 消息解码
+        long bodyLength = buffer.getLong(buffer.position());
+        buffer.position(buffer.position() + 8);
+        System.out.println("body length = " + bodyLength);
+        System.out.println(new String(buffer.array(), buffer.position(), (int) bodyLength)); // // TODO 反序列化技术
+        buffer.position((int)(buffer.position() + bodyLength));
+    }
 }
