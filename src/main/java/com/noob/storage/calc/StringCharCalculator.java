@@ -21,7 +21,6 @@ public class StringCharCalculator {
 
         int maxTimes = -1, minIndex = -1;
         char result = 0;
-        // 一次循环即得出结论
         for (int i = 0; i < lowerCaseSrc.length(); i++) {
             char c = lowerCaseSrc.charAt(i);
             int c_idx = c - 'a';

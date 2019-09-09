@@ -1,4 +1,4 @@
-package com.noob.storage.calc.leecode;
+package com.noob.storage.calc.leetcode._1004;
 
 /**
  * @author 卢云(luyun)
@@ -24,7 +24,7 @@ package com.noob.storage.calc.leecode;
  * 来源：力扣（LeetCode）
  * 链接：https://leetcode-cn.com/problems/max-consecutive-ones-iii
  */
-public class LeeCode1004 {
+public class LeeCode1004_1 {
 
     public static int longestOnes(int[] A, int K) {
         int step;
