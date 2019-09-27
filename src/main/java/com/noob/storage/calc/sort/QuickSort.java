@@ -31,6 +31,8 @@ package com.noob.storage.calc.sort;
  * key,4中A[i]不大于key的时候，改变j、i的值，使得j=j-1，i=i+1，直至找到为
  * 止。找到符合条件的值，进行交换的时候i， j指针位置不变。另外，i==j这一过程
  * 一定正好是i+或j-完成的时候，此时令循环结束
+ * <p>
+ * 时间复杂度 n*log^n
  *
  * @author 卢云(luyun)
  * @version app784
