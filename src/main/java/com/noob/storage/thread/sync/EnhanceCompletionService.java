@@ -51,9 +51,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * // 3. 创建增强完成服务
  * EnhanceCompletionService< V, S> ecs = new EnhanceCompletionService< V, S>(tpe, resultConsumer);
  * // 4. 实现任务提交者，用于提交任务到增强服务
- * AbstractTaskProvider provider = new AbstractTaskProvider(ecs){.....};
+ * AbstractTaskProvider Provider_Consumer_Mode = new AbstractTaskProvider(ecs){.....};
  * // 5. 开始执行
- * S result = ecs.execute(provider);
+ * S result = ecs.execute(Provider_Consumer_Mode);
  * </pre>
  * <p>
  * 注意事项:

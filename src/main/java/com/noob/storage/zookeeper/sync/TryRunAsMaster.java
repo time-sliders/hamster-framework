@@ -10,7 +10,7 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 客户端尝试通过建立节点的方式，成为MainServer
@@ -32,7 +32,7 @@ public class TryRunAsMaster {
      * @return true if success
      */
     public static boolean tryMaster(ZooKeeper zooKeeper, String path, String pathData)
-            throws UnsupportedEncodingException, InterruptedException, KeeperException {
+            throws InterruptedException, KeeperException {
 
         // 当前主机是否当选为Leader
         boolean result = false;
@@ -40,10 +40,10 @@ public class TryRunAsMaster {
         boolean hasLeader = false;
         byte[] pathDataBytes = null;
         if (StringUtils.isNotBlank(pathData)) {
-            pathDataBytes = pathData.getBytes("UTF-8");
+            pathDataBytes = pathData.getBytes(StandardCharsets.UTF_8);
         }
 
-        while (true) {
+        do {
             try {
                 zooKeeper.create(path, pathDataBytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
             } catch (KeeperException.ConnectionLossException | KeeperException.NodeExistsException ignore) {
@@ -69,7 +69,7 @@ public class TryRunAsMaster {
                 try {
                     Stat stat = new Stat();
                     byte[] zooKeeperDataBytes = zooKeeper.getData(path, false, stat);
-                    String zooKeeperData = new String(zooKeeperDataBytes, "UTF-8");
+                    String zooKeeperData = new String(zooKeeperDataBytes, StandardCharsets.UTF_8);
                     hasLeader = StringUtils.isNotBlank(zooKeeperData);
                     result = zooKeeperData.equals(pathData);
                     break;
@@ -78,7 +78,8 @@ public class TryRunAsMaster {
                     break;
                 } catch (KeeperException.ConnectionLossException e) {
                     // 连接失败，直接重试
-                    logger.info("ZooKeeper getNodeData occur KeeperException.ConnectionLossException>Thread_Sleep_ONE_SECONDS to CONTINUE.....");
+                    logger.info("ZooKeeper getNodeData occur KeeperException.ConnectionLossException>" +
+                            "Thread_Sleep_ONE_SECONDS to CONTINUE.....");
                     Thread.sleep(Millisecond.ONE_SECONDS);
                 }
             }
@@ -86,10 +87,7 @@ public class TryRunAsMaster {
             /*
              * 结果判断
              */
-            if (hasLeader) {
-                break;
-            }
-        }
+        } while (!hasLeader);
 
 
         return result;
