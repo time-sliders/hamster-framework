@@ -1,42 +1,53 @@
 package com.noob.storage.test.manual;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import org.apache.commons.lang.StringUtils;
 
-/**
- * @author 卢云(luyun)
- * @version app786
- * @since 2019.10.15
- */
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.Semaphore;
+
 public class Provider_Consumer_Mode<E> {
 
-    private final List<E> queue = new LinkedList<E>();
-    ReentrantLock lock = new ReentrantLock();
+    private final Queue<E> queue = new LinkedList<>();
+    private Semaphore permit = new Semaphore(5);
+    private Semaphore remain = new Semaphore(0);
 
-    class Provider implements Runnable{
-        public void put(E e) {
-            synchronized (queue) {
-                if (queue.size() > 100) {
-                    return;
-                }
-                queue.add(e);
-            }
-        }
-
-        @Override
-        public void run() {
-
-        }
+    public void put(E e) throws InterruptedException {
+        permit.acquire();
+        queue.add(e);
+        remain.release();
     }
 
-    class Consumer {
-        public E get() {
-            synchronized (queue) {
-                if (!queue.isEmpty()) {
-                    return queue.get(0);
+    public E get() throws InterruptedException {
+        remain.acquire();
+        E e = queue.poll();
+        if (e != null) {
+            permit.release();
+        }
+        return e;
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Provider_Consumer_Mode<String> m = new Provider_Consumer_Mode<String>();
+        new Thread(() -> {
+            while (true) {
+                try {
+                    System.out.println(m.get());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                return null;
+            }
+        }).start();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        //noinspection InfiniteLoopStatement
+        while (true) {
+            String s = reader.readLine();
+            if (StringUtils.isNotBlank(s)) {
+                m.put(s);
             }
         }
     }

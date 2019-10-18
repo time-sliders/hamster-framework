@@ -103,14 +103,11 @@ public class EnhanceCompletionService<V, S> {
         // 内置默认的拒绝策略，避免漏任务
         if (executor instanceof ThreadPoolExecutor) {
             ((ThreadPoolExecutor) executor).setRejectedExecutionHandler(
-                    new RejectedExecutionHandler() {
-                        @Override
-                        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                            try {
-                                executor.getQueue().put(r);
-                            } catch (InterruptedException e) {
-                                logger.error(e.getMessage(), e);
-                            }
+                    (r, executor1) -> {
+                        try {
+                            executor1.getQueue().put(r);
+                        } catch (InterruptedException e) {
+                            logger.error(e.getMessage(), e);
                         }
                     });
         }
