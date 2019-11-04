@@ -1,4 +1,4 @@
-package com.noob.storage.calc;
+package com.noob.storage.calc.string;
 
 /**
  * @author 卢云(luyun)

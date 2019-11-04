@@ -1,4 +1,4 @@
-package com.noob.storage.calc;
+package com.noob.storage.calc.bit;
 
 /**
  * @author 卢云(luyun)
