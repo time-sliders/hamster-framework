@@ -15,7 +15,7 @@ public abstract class AbstractObjectConverter<F, M> implements ObjectConverter<F
 
     /**
      * Check whether the specified facade object is null and then use
-     * {@link #onBuildDto(Object)}to transform the specified faccade object.
+     * {@link #onBuildDto(Object)}to transform the specified facade object.
      * <p>
      * {@inheritDoc}
      */
