@@ -10,6 +10,19 @@ public class StringBitAdd {
 
     }
 
+    public static String add2(String s1, String s2) {
+        int l1 = s1.length();
+        int l2 = s2.length();
+        int max = Math.max(l1, l2);
+        StringBuilder sb = new StringBuilder();
+        boolean flag = false;
+        for (int i = 0; i < max; i++) {
+            char c1 = l1 - i > 0 ? s1.charAt(i) : '0';
+        }
+
+        return null;
+    }
+
 
     /**
      * @param s1 011001001

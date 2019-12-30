@@ -1,7 +1,5 @@
 package com.noob.storage.calc.string;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * @author luyun
  * @version version 1.0

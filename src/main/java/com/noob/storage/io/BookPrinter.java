@@ -3,17 +3,16 @@ package com.noob.storage.io;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
-import java.util.concurrent.Semaphore;
 
 public class BookPrinter {
 
-    private static volatile int speed = 10;
+    private static volatile int speed = 8;
     private static volatile boolean blocked = false;
     private static final Object blockObj = new Object();
 
     public static void main(String[] args) {
-        String filePath = "/Users/zhangwei/Downloads/end/逍遥游.txt";
-        String startLine = "此时武府依旧戒备森严";
+        String filePath = "";
+        String startLine = "";
 
         new Thread(() -> {
             BufferedReader reader = null;
@@ -25,7 +24,7 @@ public class BookPrinter {
                         if ("-".equals(cmd)) {
                             blocked = true;
                             System.out.println("reading paused");
-                        } else if ("+".equals(cmd)) {
+                        } else if ("=".equals(cmd)) {
                             blocked = false;
                             synchronized (blockObj) {
                                 blockObj.notifyAll();
@@ -58,7 +57,6 @@ public class BookPrinter {
                         continue;
                     }
                 }
-
 
                 System.out.println(s);
                 try {
